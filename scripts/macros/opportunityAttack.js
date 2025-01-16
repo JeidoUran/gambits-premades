@@ -88,7 +88,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
             let dragonTurtleShield = effectOriginActor.items.getName("Dragon Turtle Dueling Shield");
             if(dragonTurtleShield) await effectOriginActor.setFlag("gambits-premades", "dragonTurtleShieldOA", true);
             
-            dialogTitle = "Opportunity Attack";
+            dialogTitle = "Attaque d'opportunité";
             dialogId = "opportunityattack";
         }
         else if(entered && !isTeleport) {
@@ -126,6 +126,18 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
 
     const initialTimeLeft = Number(MidiQOL.safeGetGameSetting('gambits-premades', `Opportunity Attack Timeout`));
     let debugEnabled = MidiQOL.safeGetGameSetting('gambits-premades', 'debugEnabled');
+
+    //Check if origin token has at least 1 AP (chara)
+    if (effectOriginActor.type === "character" && effectOriginActor.system.resources.primary.value < 1) {
+        if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because of AP`);
+        return;
+    }
+
+    //Check if origin token has at least 1 AP (NPC)
+    if (effectOriginActor.type === "npc" && effectOriginActor.system.resources.legact.value < 1) {
+        if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because of AP`);
+        return;
+    }
 
     // Check if origin token has already used reaction
     if (MidiQOL.hasUsedReaction(effectOriginActor)) {
@@ -170,7 +182,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     }
 
     //Check if token is disengaged and origin token does not have Sentinel
-    let isDisengaged = token.actor.effects.some(e => e.name.toLowerCase() === "disengage");
+    let isDisengaged = token.actor.effects.some(e => e.name.toLowerCase() === "désengagé");
     if(isDisengaged && !hasSentinel) {
         if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because token is using disengage`);
         return;
@@ -222,14 +234,13 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     let effectNameDis = ["boots of speed"];
     let hasEffectDis = token.actor.appliedEffects.some(e => effectNameDis.some(name => e.name.toLowerCase().includes(name)));
     const originDisadvantage = hasItemDis || hasEffectDis;
-    
     // Check valid weapons
     let hasWarCaster = effectOriginActor.items.find(i => i.name.toLowerCase() === "war caster");
     let hasWarCasterConfigDialog = effectOriginActor.items.some(i => i.name.toLowerCase() === "war caster");
     let overrideItems = ["Booming Blade"];
 
     let validWeapons = effectOriginActor.items.filter(item => {
-        return (((item.system?.actionType === "mwak" && item.system?.equipped === true) || (item.system?.type?.value === "monster" && item?.type === "feat" && (item.system?.actionType === "mwak" || item.system?.actionType === "msak")) || (item?.type === "weapon" && item.system?.actionType === "msak")) || 
+        return (((item.system?.actionType === "other" && item.system?.equipped === true) || (item.system?.type?.value === "monster" && item?.type === "feat" && (item.system?.actionType === "other" || item.system?.actionType === "msak")) || (item?.type === "weapon" && item.system?.actionType === "msak")) || 
                 (hasWarCaster && ((item.type === "spell" && item.system?.activation?.type === "action" && 
                 (item.system?.actionType === "msak" || item.system?.actionType === "rsak" || 
                 item.system?.actionType === "save") && (item.system?.preparation?.prepared === true || item.system?.preparation?.mode !== 'prepared' || !item.system?.preparation) &&
@@ -290,10 +301,10 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         <div class="gps-dialog-container">
             <div class="gps-dialog-section">
                 <div class="gps-dialog-content">
-                    <p class="gps-dialog-paragraph">Would you like to use your reaction to attack?${braceItemUuid ? " This will initiate a use of your Superiority Die for the Brace maneuver." : ""}</p>
+                    <p class="gps-dialog-paragraph">Voulez-vous utiliser votre réaction pour attaquer ?${braceItemUuid ? " This will initiate a use of your Superiority Die for the Brace maneuver." : ""}</p>
                     <div>
                         <div class="gps-dialog-flex">
-                            <label for="item-select_${dialogId}" class="gps-dialog-label">Weapon:</label>
+                            <label for="item-select_${dialogId}" class="gps-dialog-label">Arme:</label>
                             <select id="item-select_${dialogId}" class="gps-dialog-select">
                                 ${validWeapons.map(item => `<option name="${item.img}" value="${item.uuid}" class="gps-dialog-option" style="background-color: ${optionBackground};">${item.name} ${favoriteWeaponUuid === item.uuid ? "&#9733;" : ""} ${item.system.actionType === "msak" ? "(Melee)" : item.system.actionType === "rsak" ? "(Ranged)" : item.system.actionType === "save" ? "(Save)" : ""}</option>`).join('')}
                             </select>
@@ -303,7 +314,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
                         </div>
                         <div style="display: flex; align-items: center; margin-top: 12px;">
                             <input type="checkbox" id="gps-favorite-checkbox" style="vertical-align: middle;"/>
-                            <label for="gps-favorite-checkbox">Favorite this Option?</label>
+                            <label for="gps-favorite-checkbox">Enregistrer en favori ?</label>
                         </div>
                     </div>
                 </div>
@@ -368,7 +379,6 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         }
 
         let clonedWeapon = foundry.utils.deepClone(chosenWeapon);
-
         foundry.utils.mergeObject(clonedWeapon, {
         system: {
             range: {
@@ -384,6 +394,17 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         let userSelect = undefined;
         if(source && source === "user") userSelect = browserUser;
         else if(source && source === "gm") userSelect = gmUser;
+
+        if(effectOriginActor.type === "character") {
+            var charges = (effectOriginActor.system.resources.primary.value == null) ? 0 : effectOriginActor.system.resources.primary.value;
+            if (charges <= 4) charges += 1;
+            await effectOriginActor.update({"system.resources.primary.value" : charges});
+        }
+        else {
+            var charges = (effectOriginActor.system.resources.legact.value == null) ? 0 : effectOriginActor.system.resources.legact.value;
+            if (charges <= 4) charges += 1;
+            await effectOriginActor.update({"system.resources.legact.value" : charges});
+        }
 
         const options = {
             showFullCard: false,
@@ -458,9 +479,9 @@ export async function enableOpportunityAttack(combat, combatEvent) {
             let hasWarCaster = actor.items.find(i => i.name.toLowerCase() === "war caster");
             let overrideItems = ["Booming Blade"];
             let validWeapons = actor.items.filter(item => 
-                ((item.system?.actionType === "mwak" && item.system?.equipped === true) || 
+                ((item.system?.actionType === "other" && item.system?.equipped === true && item.system.range?.units == "touch") || 
                  (item.system?.type?.value === "monster" && item?.type === "feat" && 
-                  (item.system?.actionType === "mwak" || item.system?.actionType === "msak")) || 
+                  (item.system?.actionType === "other" || item.system?.actionType === "msak") && item.system.range?.units == "touch") || 
                  (item?.type === "weapon" && item.system?.actionType === "msak")));
         
             let validSpells = actor.items.filter(item => 
@@ -486,12 +507,14 @@ export async function enableOpportunityAttack(combat, combatEvent) {
             else conversionFactor = 1;
         
             let maxRange;
-            let mwakRange = actor.flags["midi-qol"]?.range?.mwak;
+            let mwakRange = actor.flags["midi-qol"]?.range?.other;
             if (onlyThrownWeapons || (validSpells && !validWeapons)) {
                 maxRange = 5;
             } else {
                 maxRange = validWeapons.reduce((max, item) => {
                     let rangeValue = item.system.range?.value;
+                    if (item.system.properties.has('rch') && item.system.range?.units == "touch") rangeValue = 7;
+                    else if (item.system.range?.units == "touch") rangeValue = 1.5;
                     let noThr = !item.system.properties?.has('thr');
                     if (rangeValue && !isNaN(rangeValue) && noThr) {
                         return Math.max(max, rangeValue);
@@ -502,7 +525,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
 
             if(maxRange === 0 || oaDisabled) {
                 const tokenSize = Math.max(token.width, token.height);
-                maxRange = 4 * tokenSize;
+                maxRange = 0.1 * conversionFactor * tokenSize;
             }
             else {
                 if (token.width === 1 && maxRange === 10) maxRange;
@@ -511,7 +534,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
                 else if (token.width === 3 && maxRange === 10) maxRange;
                 else if (token.width === 4 && maxRange === 10) maxRange;
                 
-                const tokenSizeOffset = Math.max(token.width, token.height) * 0.5 * canvas.scene.dimensions.distance;
+                const tokenSizeOffset = Math.max(token.width, token.height) * 0.75 * canvas.scene.dimensions.distance;
                 maxRange = (maxRange * conversionFactor) + tokenSizeOffset;
             
                 if (mwakRange) maxRange += (mwakRange * conversionFactor);
@@ -596,7 +619,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
 
                                 let recalculate = false;
                                 let tokenSize = Math.max(token.width, token.height);
-                                let validWeapons = actor.items.filter(item => (item.system.actionType === "mwak" && item.system.equipped) || (item.system?.type?.value === "monster" && item?.type === "feat" && (item.system?.actionType === "mwak" || item.system?.actionType === "msak")) || (item?.type === "weapon" && item.system?.actionType === "msak"));
+                                let validWeapons = actor.items.filter(item => (item.system.actionType === "other" && item.system.equipped && item.system.range?.units == "touch") || (item.system?.type?.value === "monster" && item?.type === "feat" && (item.system?.actionType === "other" || item.system?.actionType === "msak") && item.system.range?.units == "touch") || (item?.type === "weapon" && item.system?.actionType === "msak"));
 
                                 recalculate = await checkAndSetFlag("opportunityAttackRegionValidWeapons", validWeapons) || recalculate;
                                 recalculate = await checkAndSetFlag("opportunityAttackRegionTokenSize", tokenSize) || recalculate;
@@ -659,16 +682,16 @@ export async function enableOpportunityAttack(combat, combatEvent) {
                                 }
 
                                 async function handleMWAKRange() {
-                                    if (!actor.flags["midi-qol"]?.range?.mwak) return false;
+                                    if (!actor.flags["midi-qol"]?.range?.other) return false;
 
                                     let mwakExpire = actor.appliedEffects
                                         .filter(effect => effect.duration.turns == 1)
                                         .reduce((acc, effect) => {
-                                            const change = effect.changes.find(change => change.key == "flags.midi-qol.range.mwak");
+                                            const change = effect.changes.find(change => change.key == "flags.midi-qol.range.other");
                                             return change ? acc + Number(change.value) : acc;
                                         }, 0);
 
-                                    let mwakRange = actor.flags["midi-qol"].range.mwak - mwakExpire;
+                                    let mwakRange = actor.flags["midi-qol"].range.other - mwakExpire;
                                     return await checkAndSetFlag("opportunityAttackRegionMwakRange", mwakRange);
                                 }
 
@@ -705,6 +728,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
                                     } else {
                                         maxRange = validWeapons?.reduce((max, item) => {
                                             let rangeValue = item.system.range?.value;
+                                            if (item.system.range?.units == "touch") rangeValue = 1.5;
                                             let noThr = !item.system.properties?.has('thr');
                                             if (rangeValue && !isNaN(rangeValue) && noThr) {
                                                 return Math.max(max, rangeValue);
@@ -721,7 +745,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
 
                                     maxRange = (maxRange * conversionFactor) + tokenSizeOffset;
 
-                                    if (actor.flags["midi-qol"]?.range?.mwak) {
+                                    if (actor.flags["midi-qol"]?.range?.other) {
                                         maxRange += (region.flags["gambits-premades"].opportunityAttackRegionMwakRange * conversionFactor);
                                     }
                                     return maxRange;
