@@ -240,7 +240,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     let overrideItems = ["Booming Blade"];
 
     let validWeapons = effectOriginActor.items.filter(item => {
-        return (((item.system?.actionType === "other" && item.system?.equipped === true) || (item.system?.type?.value === "monster" && item?.type === "feat" && (item.system?.actionType === "other" || item.system?.actionType === "msak")) || (item?.type === "weapon" && item.system?.actionType === "msak")) || 
+        return (((item.system?.actionType === "utility" && item.system?.equipped === true) || (item.system?.type?.value === "monster" && item?.type === "feat" && (item.system?.actionType === "utility" || item.system?.actionType === "msak")) || (item?.type === "weapon" && item.system?.actionType === "msak")) || 
                 (hasWarCaster && ((item.type === "spell" && item.system?.activation?.type === "action" && 
                 (item.system?.actionType === "msak" || item.system?.actionType === "rsak" || 
                 item.system?.actionType === "save") && (item.system?.preparation?.prepared === true || item.system?.preparation?.mode !== 'prepared' || !item.system?.preparation) &&
@@ -395,16 +395,16 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         if(source && source === "user") userSelect = browserUser;
         else if(source && source === "gm") userSelect = gmUser;
 
-        if(effectOriginActor.type === "character") {
-            var charges = (effectOriginActor.system.resources.primary.value == null) ? 0 : effectOriginActor.system.resources.primary.value;
-            if (charges <= 4) charges += 1;
-            await effectOriginActor.update({"system.resources.primary.value" : charges});
-        }
-        else {
-            var charges = (effectOriginActor.system.resources.legact.value == null) ? 0 : effectOriginActor.system.resources.legact.value;
-            if (charges <= 4) charges += 1;
-            await effectOriginActor.update({"system.resources.legact.value" : charges});
-        }
+        // if(effectOriginActor.type === "character") {
+            // var charges = (effectOriginActor.system.resources.primary.value == null) ? 0 : effectOriginActor.system.resources.primary.value;
+            // if (charges <= 4) charges += 1;
+            // await effectOriginActor.update({"system.resources.primary.value" : charges});
+        // }
+        // else {
+            // var charges = (effectOriginActor.system.resources.legact.value == null) ? 0 : effectOriginActor.system.resources.legact.value;
+            // if (charges <= 4) charges += 1;
+            // await effectOriginActor.update({"system.resources.legact.value" : charges});
+        // }
 
         const options = {
             showFullCard: false,
@@ -421,10 +421,6 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         if (rsakCheck || originDisadvantage) {
             options.workflowOptions.disadvantage = true;
         }
-
-        chosenWeapon.prepareData();
-        chosenWeapon.prepareFinalAttributes();
-        chosenWeapon.applyActiveEffects();
 
         let itemRoll;
         if(source && source === "user") itemRoll = await socket.executeAsUser("remoteCompleteItemUse", browserUser, { itemUuid: chosenWeapon.uuid, actorUuid: effectOriginActor.uuid, options: options });
@@ -479,9 +475,9 @@ export async function enableOpportunityAttack(combat, combatEvent) {
             let hasWarCaster = actor.items.find(i => i.name.toLowerCase() === "war caster");
             let overrideItems = ["Booming Blade"];
             let validWeapons = actor.items.filter(item => 
-                ((item.system?.actionType === "other" && item.system?.equipped === true && item.system.range?.units == "touch") || 
+                ((item.system?.actionType === "utility" && item.system?.equipped === true && item.system.range?.value <= 1.5) || 
                  (item.system?.type?.value === "monster" && item?.type === "feat" && 
-                  (item.system?.actionType === "other" || item.system?.actionType === "msak") && item.system.range?.units == "touch") || 
+                  (item.system?.actionType === "utility" || item.system?.actionType === "msak") && item.system.range?.value <= 1.5) || 
                  (item?.type === "weapon" && item.system?.actionType === "msak")));
         
             let validSpells = actor.items.filter(item => 
@@ -551,7 +547,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
             const topLeftY = tokenCenterY - (sideLength / 2);
             let regionShape;
 
-            if (canvas.scene.grid.type === 0) {  // Gridless
+            if (canvas.scene.grid.type !== 1) {  // Gridless or Hex
                 regionShape = {
                     type: "ellipse",
                     x: tokenCenterX,
@@ -619,7 +615,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
 
                                 let recalculate = false;
                                 let tokenSize = Math.max(token.width, token.height);
-                                let validWeapons = actor.items.filter(item => (item.system.actionType === "other" && item.system.equipped && item.system.range?.units == "touch") || (item.system?.type?.value === "monster" && item?.type === "feat" && (item.system?.actionType === "other" || item.system?.actionType === "msak") && item.system.range?.units == "touch") || (item?.type === "weapon" && item.system?.actionType === "msak"));
+                                let validWeapons = actor.items.filter(item => (item.system.actionType === "utility" && item.system.equipped && item.system.range?.units == "touch") || (item.system?.type?.value === "monster" && item?.type === "feat" && (item.system?.actionType === "utility" || item.system?.actionType === "msak") && item.system.range?.units == "touch") || (item?.type === "weapon" && item.system?.actionType === "msak"));
 
                                 recalculate = await checkAndSetFlag("opportunityAttackRegionValidWeapons", validWeapons) || recalculate;
                                 recalculate = await checkAndSetFlag("opportunityAttackRegionTokenSize", tokenSize) || recalculate;
