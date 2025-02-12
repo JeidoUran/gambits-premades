@@ -85,7 +85,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
             let dragonTurtleShield = effectOriginActor.items.getName("Dragon Turtle Dueling Shield");
             if(dragonTurtleShield) await effectOriginActor.setFlag("gambits-premades", "dragonTurtleShieldOA", true);
             
-            dialogTitle = "Opportunity Attack";
+            dialogTitle = "Attaque d'opportunité";
             dialogId = "opportunityattack";
         }
         else if(entered && !isTeleport) {
@@ -123,6 +123,18 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
 
     const initialTimeLeft = Number(MidiQOL.safeGetGameSetting('gambits-premades', `Opportunity Attack Timeout`));
     let debugEnabled = MidiQOL.safeGetGameSetting('gambits-premades', 'debugEnabled');
+
+    //Check if origin token has at least 1 AP (chara)
+    if (effectOriginActor.type === "character" && effectOriginActor.system.resources.primary.value < 1) {
+        if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because of 0 AP`);
+        return;
+    }
+
+    //Check if origin token has at least 1 AP (NPC)
+    if (effectOriginActor.type === "npc" && effectOriginActor.items.find(e => e.name == "Points d'Action").system.uses.spent == 4) {
+        if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because of 0 AP`);
+        return;
+    }
 
     // Check if origin token has already used reaction
     if (MidiQOL.hasUsedReaction(effectOriginActor)) {
@@ -167,7 +179,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     }
 
     //Check if token is disengaged and origin token does not have Sentinel
-    let isDisengaged = token.actor.effects.some(e => e.name.toLowerCase() === "disengage");
+    let isDisengaged = token.actor.effects.some(e => e.name.toLowerCase() === "désengagé");
     if(isDisengaged && !hasSentinel) {
         if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because token is using disengage`);
         return;
@@ -226,7 +238,9 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     let overrideItems = ["Booming Blade"];
 
     let validWeapons = effectOriginActor.items.filter(item =>
-        ((item.type === "feat") || (item.system.equipped === true)) &&
+        (!item.name === "Attaque d'opportunité - 1 PA (Réaction)"
+        &&
+        (item.type === "feat") || (item.system.equipped === true)) &&
         (
           (
             item.system.activities?.some(a => a.actionType === "mwak") ||
@@ -303,10 +317,10 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         <div class="gps-dialog-container">
             <div class="gps-dialog-section">
                 <div class="gps-dialog-content">
-                    <p class="gps-dialog-paragraph">Would you like to use your reaction to attack?${braceItemUuid ? " This will initiate a use of your Superiority Die for the Brace maneuver." : ""}</p>
+                    <p class="gps-dialog-paragraph">Voulez-vous utiliser votre réaction pour attaquer ?${braceItemUuid ? " This will initiate a use of your Superiority Die for the Brace maneuver." : ""}</p>
                     <div>
                         <div class="gps-dialog-flex">
-                            <label for="item-select_${dialogId}" class="gps-dialog-label">Weapon:</label>
+                            <label for="item-select_${dialogId}" class="gps-dialog-label">Arme:</label>
                             <select id="item-select_${dialogId}" class="gps-dialog-select">
                                 ${validWeapons.map(item => `<option name="${item.img}" value="${item.uuid}" class="gps-dialog-option" style="background-color: ${optionBackground};">${item.name} ${favoriteWeaponUuid === item.uuid ? "&#9733;" : ""} ${((act) => act ? (act.actionType==="msak" ? "(Melee)" : act.actionType==="rsak" ? "(Ranged)" : act.actionType==="save" ? "(Save)" : "") : "")(item.system.activities?.find(a => ["msak","rsak","save"].includes(a.actionType)))}</option>`).join('')}
                             </select>
@@ -316,7 +330,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
                         </div>
                         <div style="display: flex; align-items: center; margin-top: 12px;">
                             <input type="checkbox" id="gps-favorite-checkbox" style="vertical-align: middle;"/>
-                            <label for="gps-favorite-checkbox">Favorite this Option?</label>
+                            <label for="gps-favorite-checkbox">Enregistrer en favori ?</label>
                         </div>
                     </div>
                 </div>
@@ -414,6 +428,17 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         if(source && source === "user") userSelect = browserUser;
         else if(source && source === "gm") userSelect = gmUser;
 
+        if(effectOriginActor.type === "character") {
+            var charges = (effectOriginActor.system.resources.primary.value == null) ? 0 : effectOriginActor.system.resources.primary.value;
+            if (charges <= 4) charges += 1;
+            await effectOriginActor.update({"system.resources.primary.value" : charges});
+        }
+        // else {
+            // var charges = (effectOriginActor.system.resources.legact.value == null) ? 0 : effectOriginActor.system.resources.legact.value;
+            // if (charges <= 4) charges += 1;
+            // await effectOriginActor.update({"system.resources.legact.value" : charges});
+        // }
+
         const options = {
             showFullCard: false,
             createWorkflow: true,
@@ -423,7 +448,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
             workflowOptions: {
                 autoRollDamage: 'always',
                 autoRollAttack: true,
-                autoFastDamage: true
+                autoFastDamage: false
             }
         };
         if (rsakCheck || originDisadvantage) {
@@ -532,7 +557,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
 
             if(maxRange === 0 || oaDisabled) {
                 const tokenSize = Math.max(token.width, token.height);
-                maxRange = 4 * tokenSize;
+                maxRange = 0.1 * conversionFactor * tokenSize;
             }
             else {
                 if (token.width === 1 && maxRange === 10) maxRange;
@@ -541,7 +566,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
                 else if (token.width === 3 && maxRange === 10) maxRange;
                 else if (token.width === 4 && maxRange === 10) maxRange;
                 
-                const tokenSizeOffset = Math.max(token.width, token.height) * 0.5 * canvas.scene.dimensions.distance;
+                const tokenSizeOffset = Math.max(token.width, token.height) * 0.75 * canvas.scene.dimensions.distance;
                 maxRange = (maxRange * conversionFactor) + tokenSizeOffset;
             
                 if (mwakRange) maxRange += (mwakRange * conversionFactor);
