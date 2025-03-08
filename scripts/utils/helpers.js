@@ -235,7 +235,6 @@ export function findValidTokens({initiatingToken, targetedToken, itemName, itemT
 
         // Check if the token is the initiating token or not a qualifying token disposition
         else if(dispositionCheck && (((dispositionCheckType === "enemy" || dispositionCheckType === "enemyAlly") && t.document.disposition === initiatingToken.document.disposition) || (dispositionCheckType === "ally" && t.document.disposition !== initiatingToken.document.disposition))) {
-            console.log(t.document.disposition, initiatingToken.document.disposition, "tokencheck")
             if(debugEnabled) console.error(`${itemName} for ${t.actor.name} failed at token disposition check`);
             return;
         }
@@ -323,16 +322,9 @@ export function findValidTokens({initiatingToken, targetedToken, itemName, itemT
             let itemExistsWithValue;
 
             if(itemNames.includes("legres")) resourceExistsWithValue = t.actor.system.resources.legres.value !== 0 ? true : false;
+            else itemExistsWithValue = t.actor.items.some(i => itemNames.includes(i.name.toLowerCase()) && i.system.uses?.spent < i.system.uses?.max);
 
-            else {
-                resourceExistsWithValue = [t.actor.system.resources.primary, t.actor.system.resources.secondary, t.actor.system.resources.tertiary].some(resource => itemNames.includes(resource?.label.toLowerCase()) && resource.value !== 0);
-
-                if (!resourceExistsWithValue) {
-                    itemExistsWithValue = t.actor.items.some(i => itemNames.includes(i.name.toLowerCase()) && i.system.uses?.value !== 0);
-                }
-            }
-
-            if (!resourceExistsWithValue && !itemExistsWithValue) {
+            if (!itemExistsWithValue && !resourceExistsWithValue) {
                 if(debugEnabled) console.error(`${itemName} for ${t.actor.name} failed at check valid feature item/resource uses`);
                 return;
             }
@@ -504,16 +496,9 @@ export function findValidToken({initiatingTokenUuid, targetedTokenUuid, itemName
         let itemExistsWithValue;
 
         if(itemNames.includes("legres")) resourceExistsWithValue = targetedToken.actor.system.resources.legres.value !== 0 ? true : false;
+        else itemExistsWithValue = targetedToken.actor.items.some(i => itemNames.includes(i.name.toLowerCase()) && i.system.uses?.spent < i.system.uses?.max);
 
-        else {
-            resourceExistsWithValue = [targetedToken.actor.system.resources.primary, targetedToken.actor.system.resources.secondary, targetedToken.actor.system.resources.tertiary].some(resource => itemNames.includes(resource?.label.toLowerCase()) && resource.value !== 0);
-
-            if (!resourceExistsWithValue) {
-                itemExistsWithValue = targetedToken.actor.items.some(i => itemNames.includes(i.name.toLowerCase()) && i.system.uses?.value !== 0);
-            }
-        }
-
-        if (!resourceExistsWithValue && !itemExistsWithValue) {
+        if (!itemExistsWithValue && !resourceExistsWithValue) {
             if(debugEnabled) console.error(`${itemName} for ${targetedToken.actor.name} failed at check valid feature item/resource uses`);
             return false;
         }
@@ -1196,7 +1181,9 @@ export async function replaceChatCard({ actorUuid, itemUuid, chatContent, rollDa
 let regionTokenStates = new Map();
 export function validateRegionMovement({regionScenario, regionStatus, regionUuid, tokenUuid, isTeleport = false, validExit = true}) {
     let region = fromUuidSync(regionUuid);
+    if(!region) return;
     let token = fromUuidSync(tokenUuid);
+    if(!token) return;
     let regionId = region.id;
     let tokenId = token.id;
     let validatedRegionMovement;
@@ -1358,15 +1345,58 @@ export function getCprConfig({itemUuid}) {
     else return {animEnabled: true, animColor: animColor};
 }
 
-export async function remoteCompleteItemUse({itemUuid, actorUuid, options}) {
+export async function remoteCompleteItemUse({itemUuid, actorUuid, options, isWeapon = false}) {
     if(!itemUuid || !actorUuid || !options) return;
 
     let itemData = await fromUuid(itemUuid);
+    let originalCheckRange = "none";
+    let configSettings = null;
+
+    if(isWeapon) {
+        /*itemData = itemData.clone({
+            system: {
+              range: {
+                value: 1000,
+                long: null,
+                units: "ft",
+                reach: 1000
+              }
+            }
+          }, {keepId: true});
+          
+          if (itemData.system.activities) {
+            itemData.system.activities.forEach(activity => {
+              foundry.utils.mergeObject(activity, {
+                  range: {
+                    value: 1000,
+                    long: null,
+                    units: "ft",
+                    reach: 1000
+                  }
+              }, { inplace: true });
+            });
+        }
+
+        itemData.prepareData();
+        itemData.applyActiveEffects();
+        */
+
+        configSettings = foundry.utils.duplicate(game.settings.get("midi-qol", "ConfigSettings"));
+        originalCheckRange = configSettings.optionalRules.checkRange;
+
+        if (originalCheckRange !== "none") {
+            await game.gps.socket.executeAsUser("gpsUpdateMidiRange", game.gps.getPrimaryGM(), { configSettings: configSettings, turnOff: true, originalCheckRange: originalCheckRange });
+        }
+    }
     
     let remoteCIU = await MidiQOL.completeItemUse(itemData, {actorUuid}, options);
     let checkHits = remoteCIU?.hitTargets?.first() ? true : false;
 
-    return {castLevel: remoteCIU?.castData?.castLevel, checkHits: checkHits};
+    if (originalCheckRange !== "none") {
+        await game.gps.socket.executeAsUser("gpsUpdateMidiRange", game.gps.getPrimaryGM(), { configSettings: configSettings, turnOff: false, originalCheckRange: originalCheckRange });
+    }
+
+    return {castLevel: remoteCIU?.castData?.castLevel, baseLevel: remoteCIU?.castData?.baseLevel, itemType: remoteCIU?.item?.system?.preparation?.mode, checkHits: checkHits};
 }
 
 export async function remoteAbilityTest({spellcasting, actorUuid}) {
@@ -1386,277 +1416,26 @@ export async function remoteAbilityTest({spellcasting, actorUuid}) {
 
 export async function gpsActivityUse({itemUuid, identifier, targetUuid}) {
     const item = await fromUuid(itemUuid);
+    if(!item) return console.error(`Shame you didn't pass me an itemUuid`)
     const activity = item.system.activities.find(a => a.identifier === identifier);
+    if(!activity) return console.error(`Naughty Naughty: You've likely removed the identifier name from a ${item.name} automation activity and now it's nowhere to be found ¯\_(ツ)_/¯`)
     const options = { midiOptions: { targetUuids: [targetUuid], noOnUseMacro: true, configureDialog: false, showFullCard: false, ignoreUserTargets: true, checkGMStatus: true } };
     return await MidiQOL.completeActivityUse(activity.uuid, options, {}, {});
 }
 
-export async function weaponAnimations({enableTrail = true, enableImpact = true, enableSound = false, enableSwitchDistance = false, enableReturn = false, enableBlood = true, enableShake = true, weaponGroup, weapon, trail, color, impact, impactScale, soundFileMelee, soundFileRange, delaySound, switchDistanceFt, range, returnFile, delayBetweenAttacks, source, targets}) {
-    async function meleeAttack({target, randMelee, randTrail, impact, isMirrored, targetScale, within5ft}) {
-        const sourceScale = { x: source?.document?.texture?.scaleX ?? 1, y: source?.document?.texture?.scaleY ?? 1 }
-        
-        const amplitude = Sequencer.Helpers.random_float_between(0.0, 0.2);
-        let hitRay = new Ray(source, target);
-        const shakeDirection = { x: Math.sign(hitRay.dx), y: Math.sign(hitRay.dy) };
-        const values = {
-            x: [0, -amplitude * shakeDirection.y, amplitude * shakeDirection.y, (-amplitude * shakeDirection.y) / 4, (amplitude * shakeDirection.y) / 4, 0],
-            y: [0, amplitude * shakeDirection.x, -amplitude * shakeDirection.x, (amplitude * shakeDirection.x) / 4, (-amplitude * shakeDirection.x) / 4, 0]
-        }
-        const interval = 50;
-        const easeOption = "easeInOutSine";
+export async function gpsActivityUpdate({activityUuid, updates}) {
+    let activity = await fromUuid(activityUuid);
+    await activity.update(updates);
+}
 
-        new Sequence()
-
-            .effect()
-            .copySprite(source)
-            .scale({ x: sourceScale.x, y: sourceScale.y })
-            .anchor(0.5)
-            .rotate(0)
-            .rotateTowards(target, {rotationOffset: -90})
-            .duration(1500)
-            .fadeOut(500)
-            .zIndex(5)
-            .playIf(within5ft)
-
-            .effect()
-            .copySprite(source)
-            .scale({ x: sourceScale.x, y: sourceScale.y })
-            .anchor(0.5)
-            .rotate(0)
-            .rotateTowards(target, {rotationOffset: -90})
-            .animateProperty("sprite", "position.y", { from: 0, to: hitRay.distance -gridSize, duration: 500+hitRay.distance, ease: "easeOutQuint"})
-            .duration(1500)
-            .fadeOut(500)
-            .zIndex(5)
-            .playIf(!within5ft)
-
-            .animation()
-            .on(source)
-            .fadeOut(50)
-
-            .effect()
-            .file("jb2a.gust_of_wind.veryfast")
-            .atLocation(source, {cacheLocation: true})
-            .stretchTo(target)
-            .randomizeMirrorY()
-            .belowTokens()
-            .playIf(!within5ft)
-
-            .effect()
-            .file(`${randTrail}`)
-            .atLocation(target)
-            .rotateTowards(source)
-            .rotate(180)
-            .animateProperty("sprite", "position.x", { from: -(2.5*gridSize + hitRay.distance), to: -2.5*gridSize, duration: 500+hitRay.distance, ease: "easeOutQuint"})
-            .scale(1)
-            .mirrorY(isMirrored)
-            .zIndex(11)
-            .playbackRate(0.9)
-            .playIf(enableTrail)
-
-            .effect()
-            .file(`${randMelee}`)
-            .atLocation(target)
-            .rotateTowards(source)
-            .rotate(180)
-            .animateProperty("sprite", "position.x", { from: -(2.5*gridSize + hitRay.distance), to: -2.5*gridSize, duration: 500+hitRay.distance, ease: "easeOutQuint"})
-            .scale(1)
-            .mirrorY(isMirrored)
-            .zIndex(10)
-            .playbackRate(0.9)
-            .waitUntilFinished(-1000) // By design, The hit should always be 1 second from the end of the weapon attack and the trail animations
-
-
-            .animation()
-            .on(source)
-            .fadeIn(500)
-
-            .sound()
-            .file(soundFileMelee)
-            .playIf(enableSound)
-
-            .effect()
-            .file(`${impact}`)
-            .atLocation(target)
-            .scaleToObject(impactScale, { uniform: true })
-            .zIndex(12)
-            .playbackRate(0.9)
-            .playIf(enableImpact)
-
-            //START - BLOOD SPLATTER EFFECT
-            .effect()
-            .file('jb2a.liquid.splash_side.red')
-            .atLocation(target)
-            .rotateTowards(source)
-            .randomRotation()
-            .scaleToObject(1.5, { uniform: true })
-            .playIf(enableBlood)
-            .zIndex(12)
-            //END - BLOOD SPLATTER EFFECT
-
-            // START OF SHAKE SECTION
-            .animation()
-            .on(target)
-            .fadeOut(50)
-            .playIf(enableShake)
-
-            .effect()
-            .copySprite(target)
-            .loopProperty("spriteContainer", "position.x", {
-                values: values.x,
-                duration: interval - ((interval * amplitude) / 2),
-                gridUnits: true,
-                ease: easeOption
-            })
-            .loopProperty("spriteContainer", "position.y", {
-                values: values.y,
-                duration: interval - ((interval * amplitude) / 2),
-                gridUnits: true,
-                ease: easeOption
-            })
-            .scale({ x: targetScale.x, y: targetScale.y })
-            .duration(interval * 9)
-            .playIf(enableShake)
-            .zIndex(1)
-            .waitUntilFinished(-150)
-
-            .animation()
-            .on(target)
-            .fadeIn(50)
-            .playIf(enableShake)
-            // END OF SHAKE SECTION
-
-            .play();
-    };
-
-    async function rangedAttack({target, targetScale}) {
-        const sourceScale = { x: source?.document?.texture?.scaleX ?? 1, y: source?.document?.texture?.scaleY ?? 1 }
-        const amplitude = Sequencer.Helpers.random_float_between(0.0, 0.2);
-        let hitRay = new Ray(source, target);
-        const shakeDirection = { x: Math.sign(hitRay.dx), y: Math.sign(hitRay.dy) };
-        const values = {
-            x: [0, -amplitude * shakeDirection.y, amplitude * shakeDirection.y, (-amplitude * shakeDirection.y) / 4, (amplitude * shakeDirection.y) / 4, 0],
-            y: [0, amplitude * shakeDirection.x, -amplitude * shakeDirection.x, (amplitude * shakeDirection.x) / 4, (-amplitude * shakeDirection.x) / 4, 0]
-        }
-        const interval = 50;
-        const easeOption = "easeInOutSine";
-
-        new Sequence()
-
-            .sound()
-            .file(soundFileRange)
-            .playIf(enableSound)
-            .delay(delaySound)
-
-            .effect()
-            .copySprite(source)
-            .scale({ x: sourceScale.x, y: sourceScale.y })
-            .anchor(0.5)
-            .rotate(0)
-            .rotateTowards(target, {rotationOffset: -90})
-            .duration(1500)
-            .fadeOut(500)
-            .zIndex(5)
-
-            .effect()
-            .file(range)
-            .atLocation(source)
-            .stretchTo(target)
-            .waitUntilFinished(-800)
-            .zIndex(10)
-
-            .effect()
-            .file(`${impact}`)
-            .atLocation(target)
-            .scaleToObject(1.2, { uniform: true })
-            .zIndex(12)
-            .playIf(enableImpact)
-
-            .effect()
-            .file(returnFile)
-            .atLocation(source)
-            .stretchTo(target)
-            .zIndex(10)
-            .playIf(enableReturn)
-
-            //START - BLOOD SPLATTER EFFECT
-            .effect()
-            .file('jb2a.liquid.splash_side.red')
-            .atLocation(target)
-            .rotateTowards(source)
-            .randomRotation()
-            .scaleToObject(1.5, { uniform: true })
-            .zIndex(11)
-            .playIf(enableBlood)
-            //END - BLOOD SPLATTER EFFECT
-
-            // START OF SHAKE SECTION
-            .animation()
-            .on(target)
-            .fadeOut(50)
-            .playIf(enableShake)
-
-            .effect()
-            .copySprite(target)
-            .loopProperty("spriteContainer", "position.x", {
-                values: values.x,
-                duration: interval - ((interval * amplitude) / 2),
-                gridUnits: true,
-                ease: easeOption
-            })
-            .loopProperty("spriteContainer", "position.y", {
-                values: values.y,
-                duration: interval - ((interval * amplitude) / 2),
-                gridUnits: true,
-                ease: easeOption
-            })
-            .scale({ x: targetScale.x, y: targetScale.y })
-            .duration(interval * 9)
-            .playIf(enableShake)
-            .zIndex(1)
-            .waitUntilFinished(-150)
-
-            .animation()
-            .on(target)
-            .fadeIn(50)
-            .playIf(enableShake)
-            // END OF SHAKE SECTION
-
-            .play()
+export async function gpsUpdateMidiRange({configSettings, turnOff, originalCheckRange}) {
+    if (turnOff) {
+        configSettings.optionalRules.checkRange = "none";
+        await game.settings.set("midi-qol", "ConfigSettings", configSettings);
     }
-
-    /**************************
-     * ANIMATION CALL AND LOOP*
-     **************************/
-
-    const dbPath = `jb2a.${weaponGroup}.${weapon}`;
-    const entries = Sequencer.Database.getEntry(dbPath) ?? null;
-    const entriesLength = entries.length;
-    const gridSize = canvas.grid.size;
-
-    for (let target of targets) {
-        let targetScale = { x: target?.document?.texture?.scaleX ?? 1, y: target?.document?.texture?.scaleY ?? 1 }
-        let rand = Math.floor(Math.random() * ((entriesLength -1) + 1))
-
-        let randMelee = `${dbPath}.${rand}`;
-        let randTrail;
-        enableTrail ? randTrail =`jb2a.${weaponGroup}.${trail}.${color}.${rand}` : randTrail = 'jb2a.antilife_shell.blue_no_circle'
-        
-        // Let's add to the randomisation by mirroring the animation half the time, on top of the random attack variation.
-        let isMirrored = Math.random() < 0.5; // 50% probability. 0.1 would make it 10%, 0.2 20%...etc
-
-        const targetBounds = target.bounds.pad(gridSize * (switchDistanceFt / 5 - 1 + 0.5), gridSize * (switchDistanceFt / 5 - 1 + 0.5));
-        const sourceBounds = source.bounds;
-        const within5ft = (target.bounds.pad(gridSize * (0.5), gridSize * (0.5))).intersects(sourceBounds);
-        const withinSwitchDistance = targetBounds.intersects(sourceBounds);
-
-        if (withinSwitchDistance || !enableSwitchDistance) {
-            await meleeAttack({target, randMelee, randTrail, impact, isMirrored, targetScale, within5ft})
-            await Sequencer.Helpers.wait(delayBetweenAttacks)
-        }
-        else {
-            await rangedAttack({target, targetScale})
-            await Sequencer.Helpers.wait(delayBetweenAttacks)
-        }
+    else if (!turnOff) {
+        configSettings = foundry.utils.duplicate(game.settings.get("midi-qol", "ConfigSettings"));
+        configSettings.optionalRules.checkRange = originalCheckRange;
+        await game.settings.set("midi-qol", "ConfigSettings", configSettings);
     }
 }

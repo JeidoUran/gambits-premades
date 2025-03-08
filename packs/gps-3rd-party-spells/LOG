@@ -1,8 +1,15 @@
-2025/02/12-13:27:14.835 44b4 Recovering log #2020
-2025/02/12-13:27:14.841 44b4 Delete type=0 #2020
-2025/02/12-13:27:14.841 44b4 Delete type=3 #2018
-2025/02/12-17:55:08.046 2d5c Level-0 table #2025: started
-2025/02/12-17:55:08.046 2d5c Level-0 table #2025: 0 bytes OK
-2025/02/12-17:55:08.048 2d5c Delete type=0 #2023
-2025/02/12-17:55:08.051 2d5c Manual compaction at level-0 from '!items!2YNbYocBRdEDgO4Q' @ 72057594037927935 : 1 .. '!items.effects!qBnx0VU4WBSLrGeK.zhzkM83QyjS4pBGp' @ 0 : 0; will stop at (end)
-2025/02/12-17:55:08.051 2d5c Manual compaction at level-1 from '!items!2YNbYocBRdEDgO4Q' @ 72057594037927935 : 1 .. '!items.effects!qBnx0VU4WBSLrGeK.zhzkM83QyjS4pBGp' @ 0 : 0; will stop at (end)
+2025/03/02-20:52:25.540 1ac0 Recovering log #2147
+2025/03/02-20:52:25.549 1ac0 Delete type=0 #2147
+2025/03/02-20:52:25.550 1ac0 Delete type=3 #2145
+2025/03/04-00:55:04.747 3e0c Level-0 table #2153: started
+2025/03/04-00:55:04.757 3e0c Level-0 table #2153: 163094 bytes OK
+2025/03/04-00:55:04.760 3e0c Delete type=0 #2151
+2025/03/04-00:55:04.768 3e0c Manual compaction at level-0 from '!items!2YNbYocBRdEDgO4Q' @ 72057594037927935 : 1 .. '!items.effects!naJb6xUQcmh6w3CM.aTdVZ7BfVtRpnHyR' @ 0 : 0; will stop at (end)
+2025/03/04-00:55:04.771 3e0c Manual compaction at level-1 from '!items!2YNbYocBRdEDgO4Q' @ 72057594037927935 : 1 .. '!items.effects!naJb6xUQcmh6w3CM.aTdVZ7BfVtRpnHyR' @ 0 : 0; will stop at '!items.effects!k5pbjfKOB0VHMUhw.8tw03CXz3eslo1Hi' @ 682 : 1
+2025/03/04-00:55:04.771 3e0c Compacting 1@1 + 1@2 files
+2025/03/04-00:55:04.779 3e0c Generated table #2154@1: 38 keys, 89807 bytes
+2025/03/04-00:55:04.779 3e0c Compacted 1@1 + 1@2 files => 89807 bytes
+2025/03/04-00:55:04.783 3e0c compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/03/04-00:55:04.783 3e0c Delete type=2 #2149
+2025/03/04-00:55:04.783 3e0c Delete type=2 #2153
+2025/03/04-00:55:04.783 3e0c Manual compaction at level-1 from '!items.effects!k5pbjfKOB0VHMUhw.8tw03CXz3eslo1Hi' @ 682 : 1 .. '!items.effects!naJb6xUQcmh6w3CM.aTdVZ7BfVtRpnHyR' @ 0 : 0; will stop at (end)

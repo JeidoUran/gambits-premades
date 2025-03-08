@@ -19,7 +19,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     const effectOriginActor = await fromUuid(region.flags["gambits-premades"].actorUuid);
     const effectOriginToken = await fromUuid(region.flags["gambits-premades"].tokenUuid);
     
-    let hasSentinel = effectOriginActor.items.some(i => i.flags["gambits-premades"]?.gpsUuid === "f7c0b8c6-a36a-4f29-8adc-38ada0ac186c");
+    let hasSentinel = effectOriginActor?.items?.find(i => i.flags["gambits-premades"]?.gpsUuid === "f7c0b8c6-a36a-4f29-8adc-38ada0ac186c");
 
     /*if(hasSentinel) {
         let sentinelUsed = effectOriginActor.getFlag("gambits-premades", "sentinelUsed");
@@ -99,11 +99,6 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
             else if(effectOriginActor.classes?.fighter && effectOriginActor.classes?.fighter?.subclass?.name === "Battle Master") {
                 let braceItem = effectOriginActor.items.getName("Maneuvers: Brace");
                 if(!braceItem) return;
-                const superiorityNames = ["superiority dice", "superiority die"];
-                let resourceExistsWithValue = [effectOriginActor.system.resources.primary, effectOriginActor.system.resources.secondary, effectOriginActor.system.resources.tertiary].some(resource => superiorityNames.includes(resource?.label.toLowerCase()) && resource.value !== 0);
-                let itemExistsWithValue;
-                if (!resourceExistsWithValue) itemExistsWithValue = !!effectOriginActor.items.find(i => superiorityNames.includes(i.name.toLowerCase()) && i.system.uses.value !== 0);
-                if (!resourceExistsWithValue && !itemExistsWithValue) return;
                 braceItemUuid = braceItem.uuid;
                 dialogTitle = "Maneuvers: Brace Opportunity Attack";
                 dialogId = "maneuversbraceopportunityattack";
@@ -212,7 +207,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     }
 
     // Check if the token has cast Kinetic Jaunt, Zephyr Strike, or the generic immunity effect has been applied
-    const effectNamesToken = ["Kinetic Jaunt", "Zephyr Strike", "Opportunity Attack Immunity", "Rabbit Hop", "Ashardalon's Stride", "Hurried Response"];
+    const effectNamesToken = ["Kinetic Jaunt", "Zephyr Strike", "Opportunity Attack Immunity", "Rabbit Hop", "Ashardalon's Stride", "Hurried Response", "Sudden Rush"];
     let hasEffectToken = token.actor.appliedEffects.some(effect => effectNamesToken.includes(effect.name));
     if(hasEffectToken) {
         if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because token is using an immunity effect`);
@@ -233,34 +228,40 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     const originDisadvantage = hasItemDis || hasEffectDis;
     
     // Check valid weapons
-    let hasWarCaster = effectOriginActor.items.some(i => i.flags["gambits-premades"]?.gpsUuid === "4cb8e0f5-63fd-49b7-b167-511db23d9dbf");
-    let hasWarCasterConfigDialog = effectOriginActor.items.some(i => i.name.toLowerCase() === "war caster");
+    let hasWarCaster = effectOriginActor.items.find(i => i.flags["gambits-premades"]?.gpsUuid === "4cb8e0f5-63fd-49b7-b167-511db23d9dbf");
+    let warCasterMelee = true;
+    let warCasterRange = true;
+    if (hasWarCaster) {
+        if (game.modules.get("chris-premades")?.active) {
+            let cprConfig = hasWarCaster?.getFlag("chris-premades", "config");
+            if (cprConfig && 'warCasterRange' in cprConfig) {
+                warCasterRange = cprConfig.warCasterRange;
+              }
+              
+              if (cprConfig && 'warCasterMelee' in cprConfig) {
+                warCasterMelee = cprConfig.warCasterMelee;
+              }
+        }
+    }
+    if(!warCasterMelee && !warCasterRange) hasWarCaster = false;
     let overrideItems = ["Booming Blade"];
 
-    let validWeapons = effectOriginActor.items.filter(item =>
-        (item.name !== "Attaque d'opportunité - 1 PA (Réaction)"
-        &&
-        (item.type === "feat") || (item.system.equipped === true)) &&
-        (
-          (
-            item.system.activities?.some(a => a.actionType === "mwak") ||
-            (item.system?.type?.value === "monster" && item.type === "feat" &&
-              item.system.activities?.some(a => a.actionType === "mwak" || a.actionType === "msak")) ||
-            (item.type === "weapon" && item.system.activities?.some(a => a.actionType === "msak"))
-          )
-          ||
-          (hasWarCaster && (
-            (
-              item.type === "spell" &&
-              item.system.activities?.some(a => activation?.type === "action" && (a.actionType === "msak" || a.actionType === "rsak" || a.actionType === "save")) &&
-              (item.system.preparation?.prepared === true || item.system.preparation?.mode !== "prepared" || !item.system.preparation) &&
-              (item.system.target?.type === "creature" || item.system.target?.type === "enemy")
-            )
-            ||
-            overrideItems.includes(item.name)
-          ))
-        )
-    );
+    let validWeapons = effectOriginActor.items.filter(item => {
+        const acts = item.system?.activities ?? [];
+      
+        const qualifiesWeaponOrFeat = (acts.some(a => a.actionType === "mwak") && item.system?.equipped === true) || (item.system?.type?.value === "monster" && item.type === "feat" && acts.some(a => a.actionType === "mwak" || a.actionType === "msak"));
+
+        let warCasterSpell;
+        if(hasWarCaster) {
+            let allowedActionTypes = [];
+            if (warCasterMelee) allowedActionTypes.push("msak");
+            if (warCasterRange) allowedActionTypes.push("rsak", "save");
+        
+            warCasterSpell = (item.type === "spell" && item.system?.activation?.type === "action" && acts.some(a => allowedActionTypes.includes(a.actionType)) && ( item.system?.preparation?.prepared || item.system?.preparation?.mode !== "prepared" || !item.system?.preparation ) && acts.some(a => ["creature", "enemy"].includes(a.target?.affects?.type))) || (warCasterMelee && overrideItems.includes(item.name));
+        }
+      
+        return qualifiesWeaponOrFeat || warCasterSpell;
+    });
 
     if (!validWeapons.length) return;
     
@@ -317,7 +318,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         <div class="gps-dialog-container">
             <div class="gps-dialog-section">
                 <div class="gps-dialog-content">
-                    <p class="gps-dialog-paragraph">Voulez-vous utiliser votre réaction pour attaquer ?${braceItemUuid ? " This will initiate a use of your Superiority Die for the Brace maneuver." : ""}</p>
+                    <p class="gps-dialog-paragraph">Would you like to use your reaction to attack?${hasWarCaster ? " If using War Caster to cast a spell, it must effect only the creature who triggered this Opportunity Attack." : ""}${braceItemUuid ? " This will initiate a use of your Superiority Die for the Brace maneuver." : ""}</p>
                     <div>
                         <div class="gps-dialog-flex">
                             <label for="item-select_${dialogId}" class="gps-dialog-label">Arme:</label>
@@ -369,9 +370,23 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     }
     else if (userDecision) {
         if (braceItemUuid) {
-            let braceItem = await fromUuid(braceItemUuid);
-            const braceRoll = await braceItem.use();
-            if (braceRoll.aborted === true) return;
+            let braceRoll;
+            const options = {
+                showFullCard: false,
+                createWorkflow: true,
+                versatile: false,
+                configureDialog: false,
+                targetUuids: [token.uuid],
+                workflowOptions: {
+                    autoRollDamage: 'always',
+                    autoRollAttack: true,
+                    autoFastDamage: true
+                }
+            };
+
+            if(source && source === "user") braceRoll = await socket.executeAsUser("remoteCompleteItemUse", browserUser, { itemUuid: braceItemUuid, actorUuid: effectOriginActor.uuid, options: options });
+            else if(source && source === "gm") braceRoll = await socket.executeAsUser("remoteCompleteItemUse", gmUser, { itemUuid: braceItemUuid, actorUuid: effectOriginActor.uuid, options: options });
+            if (!braceRoll) return;
         }
 
         if (!selectedItemUuid) {
@@ -394,34 +409,6 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
            await chosenWeapon.setFlag("midi-qol", "oaFavoriteAttack", true);
         }
 
-        let clonedWeapon = foundry.utils.deepClone(chosenWeapon);
-
-        foundry.utils.mergeObject(clonedWeapon, {
-        system: {
-            range: {
-                value: 1000,
-                long: null,
-                units: "ft",
-                reach: 1000
-            }
-        }
-        }, { inplace: true });
-
-        if (clonedWeapon.system.activities && Array.isArray(clonedWeapon.system.activities)) {
-            clonedWeapon.system.activities.forEach(activity => {
-              foundry.utils.mergeObject(activity, {
-                  range: {
-                    value: 1000,
-                    long: null,
-                    units: "ft",
-                    reach: 1000
-                  }
-              }, { inplace: true });
-            });
-        }
-
-        chosenWeapon = clonedWeapon;
-
         let userSelect = undefined;
         if(source && source === "user") userSelect = browserUser;
         else if(source && source === "gm") userSelect = gmUser;
@@ -441,7 +428,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
             showFullCard: false,
             createWorkflow: true,
             versatile: false,
-            configureDialog: hasWarCasterConfigDialog,
+            configureDialog: hasWarCaster,
             targetUuids: [token.uuid],
             workflowOptions: {
                 autoRollDamage: 'always',
@@ -454,8 +441,8 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         }
 
         let itemRoll;
-        if(source && source === "user") itemRoll = await game.gps.socket.executeAsUser("remoteCompleteItemUse", browserUser, { itemUuid: chosenWeapon.uuid, actorUuid: effectOriginActor.uuid, options: options });
-        else if(source && source === "gm") itemRoll = await game.gps.socket.executeAsUser("remoteCompleteItemUse", gmUser, { itemUuid: chosenWeapon.uuid, actorUuid: effectOriginActor.uuid, options: options });
+        if(source && source === "user") itemRoll = await game.gps.socket.executeAsUser("remoteCompleteItemUse", browserUser, { itemUuid: chosenWeapon.uuid, actorUuid: effectOriginActor.uuid, options: options, isWeapon: true });
+        else if(source && source === "gm") itemRoll = await game.gps.socket.executeAsUser("remoteCompleteItemUse", gmUser, { itemUuid: chosenWeapon.uuid, actorUuid: effectOriginActor.uuid, options: options, isWeapon: true });
 
         let checkHits = itemRoll.checkHits;
 
@@ -503,7 +490,22 @@ export async function enableOpportunityAttack(combat, combatEvent) {
         let browserUser = MidiQOL.playerForActor(actor);
     
         if (actor.type === 'npc' || actor.type === 'character') {
-            let hasWarCaster = actor.items.some(i => i.flags["gambits-premades"]?.gpsUuid === "4cb8e0f5-63fd-49b7-b167-511db23d9dbf");
+            let hasWarCaster = actor.items.find(i => i.flags["gambits-premades"]?.gpsUuid === "4cb8e0f5-63fd-49b7-b167-511db23d9dbf");
+            let warCasterMelee = true;
+            let warCasterRange = true;
+            if (hasWarCaster) {
+                if (game.modules.get("chris-premades")?.active) {
+                    let cprConfig = hasWarCaster?.getFlag("chris-premades", "config");
+                    if (cprConfig && 'warCasterRange' in cprConfig) {
+                        warCasterRange = cprConfig.warCasterRange;
+                    }
+                    
+                    if (cprConfig && 'warCasterMelee' in cprConfig) {
+                        warCasterMelee = cprConfig.warCasterMelee;
+                    }
+                }
+            }
+            if(!warCasterMelee && !warCasterRange) hasWarCaster = false;
             let overrideItems = ["Booming Blade"];
 
             let validWeapons = actor.items.filter(item =>
@@ -511,11 +513,9 @@ export async function enableOpportunityAttack(combat, combatEvent) {
             );
 
             let validSpells = actor.items.filter(item =>
-                (
-                    hasWarCaster && item.type === "spell" && item.system.activities?.some(a => a.activation?.type === "action" && (a.actionType === "msak" || a.actionType === "rsak" || a.actionType === "save")) && (item.system.preparation?.prepared === true || item.system.preparation?.mode !== "prepared" || !item.system.preparation) && (item.system.target?.type === "creature" || item.system.target?.type === "enemy")
-                ) || overrideItems.includes(item.name)
+                (hasWarCaster && item.type === "spell" && item.system.activities?.some(a => a.activation?.type === "action" && (a.actionType === "msak" || a.actionType === "rsak" || a.actionType === "save")) && (item.system.preparation?.prepared === true || item.system.preparation?.mode !== "prepared" || !item.system.preparation) && item.system.activities?.some(a => ["creature", "enemy"].includes(a.target?.affects.type))) || overrideItems.includes(item.name)
             );
-            
+
             let oaDisabled;
             if (!validWeapons.length && !validSpells.length) {
                 ui.notifications.warn(`No Valid Melee options found, cancelling Opportunity Attack options for ${actor.name}`);
@@ -649,7 +649,14 @@ export async function enableOpportunityAttack(combat, combatEvent) {
 
                                 let recalculate = false;
                                 let tokenSize = Math.max(token.width, token.height);
-                                let validWeapons = actor.items.filter(item => item.system.equipped && item.system.activities && (item.system?.type?.value === "monster" && item.type === "feat" ? item.system.activities.some(activity => activity?.actionType === "mwak" || activity?.actionType === "msak") : item.type === "weapon" ? item.system.activities.some(activity => activity?.actionType === "msak") : item.system.activities.some(activity => activity?.actionType === "mwak")));
+
+                                let validWeapons = actor.items.filter(item => {
+                                    const acts = item.system?.activities ?? [];
+                                
+                                    const qualifiesWeaponOrFeat = (acts.some(a => a.actionType === "mwak") && item.system?.equipped === true) || (item.system?.type?.value === "monster" && item.type === "feat" && acts.some(a => a.actionType === "mwak" || a.actionType === "msak"));
+                                
+                                    return qualifiesWeaponOrFeat;
+                                });
 
                                 recalculate = await checkAndSetFlag("opportunityAttackRegionValidWeapons", validWeapons) || recalculate;
                                 recalculate = await checkAndSetFlag("opportunityAttackRegionTokenSize", tokenSize) || recalculate;

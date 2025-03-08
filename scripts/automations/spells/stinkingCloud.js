@@ -9,7 +9,7 @@ export async function stinkingCloud({ speaker, actor, token, character, item, ar
         new Sequence()
             .effect()
             .atLocation(template)
-            .file("jb2a.fog_cloud.02.green") //Change animation you'd like to use here
+            .file("jb2a.fog_cloud.02.green")
             .scaleToObject()
             .tieToDocuments(template)
             .belowTokens()
@@ -18,10 +18,7 @@ export async function stinkingCloud({ speaker, actor, token, character, item, ar
             .play()
     }
     else if(args[0] === "each") {
-        const effectOriginActor = await fromUuid(args[2]);
         const uuid = actor.uuid;
-        const saveDC = effectOriginActor.system.attributes.spelldc;
-        const saveAbility = "con";
         const ci = actor.system.traits.ci.value.has("poisoned");
 
         if(!ci) {

@@ -3,6 +3,7 @@ import { registerHooks } from "./utils/hooks.js";
 import { automationRegistry } from "./automations/index.js";
 import { refreshTemplateVisibility, registerWrapping, updateSettings } from "./utils/hookUtils.js";
 import * as helpers from "./utils/helpers.js";
+import { weaponAnimations } from "./utils/animationUtils.js";
 
 Hooks.once('init', async function() {
     registerSettings();
@@ -37,6 +38,8 @@ Hooks.once('socketlib.ready', async function() {
     game.gps.socket.register("legendaryResistance", automationRegistry.legendaryResistance);
     game.gps.socket.register("burstOfIngenuity", automationRegistry.burstOfIngenuity);
     game.gps.socket.register("temporalShunt", automationRegistry.temporalShunt);
+    game.gps.socket.register("drafynsBaneOfExcellence", automationRegistry.drafynsBaneOfExcellence);
+    game.gps.socket.register("taleOfHubris", automationRegistry.taleOfHubris);
 
     //Helpers
     game.gps.socket.register("deleteChatMessage", helpers.deleteChatMessage);
@@ -62,13 +65,17 @@ Hooks.once('socketlib.ready', async function() {
     game.gps.socket.register("gmDeleteItem", helpers.gmDeleteItem);
     game.gps.socket.register("remoteCompleteItemUse", helpers.remoteCompleteItemUse);
     game.gps.socket.register("remoteAbilityTest", helpers.remoteAbilityTest);
+    game.gps.socket.register("gpsActivityUse", helpers.gpsActivityUse);
+    game.gps.socket.register("gpsActivityUpdate", helpers.gpsActivityUpdate);
+    game.gps.socket.register("gpsUpdateMidiRange", helpers.gpsUpdateMidiRange);
 })
 
 Hooks.once('ready', async function() {
     game.gps = {
         ...game.gps,
         ...helpers,
-        ...automationRegistry
+        ...automationRegistry,
+        weaponAnimations
     };
 
     refreshTemplateVisibility();
