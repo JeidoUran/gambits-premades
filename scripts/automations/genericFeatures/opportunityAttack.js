@@ -238,7 +238,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     let overrideItems = ["Booming Blade"];
 
     let validWeapons = effectOriginActor.items.filter(item =>
-        (!item.name === "Attaque d'opportunité - 1 PA (Réaction)"
+        (item.name !== "Attaque d'opportunité - 1 PA (Réaction)"
         &&
         (item.type === "feat") || (item.system.equipped === true)) &&
         (
