@@ -19,7 +19,11 @@ jobs:
         id: set-release-notes-github
         run: |
           echo "- Bugfixes" >> release_notes.txt
-          echo "  - Opportunity Attack: Fix gm flag socket not using the correct ref" >> release_notes.txt
+          echo "  - Opportunity Attack: Fix Brace item use not socketed correctly." >> release_notes.txt
+          echo "  - Dissonant Whispers: Fix item activity missing somehow" >> release_notes.txt
+          echo "  - Triumph: Fix effect macro still set to run from forever ago" >> release_notes.txt
+          echo "  - Indomitable: Fix prompt firing for non-save events (May have been an issue in some other automations as well)" >> release_notes.txt
+          echo "  - Storm Mote: Fix this being completely broken due to a simple activity consumption issue" >> release_notes.txt
           echo "release-notes-github<<EOF" >> $GITHUB_ENV
           cat release_notes.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
