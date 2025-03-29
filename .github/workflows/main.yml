@@ -18,10 +18,10 @@ jobs:
       - name: Set Release Notes for Github
         id: set-release-notes-github
         run: |
-          echo "- Additions:" >> release_notes.txt
-          echo "  - Karma: Added homebrew feature Karma" >> release_notes.txt
           echo "- Bugfixes:" >> release_notes.txt
-          echo "  - Couple small fixes for animationUtils and an arcane archer hook error." >> release_notes.txt
+          echo "  - Protection: Cleaned up a couple small things." >> release_notes.txt
+          echo "  - Indomitable: Cleaned up a couple small things." >> release_notes.txt
+          echo "  - replaceChatCard: Bugfixes to address some changes in the chat data returned in 4.x. Items using this function will now only create a new chat card when necessary, otherwise the original will be updated like in 3.x." >> release_notes.txt
           echo "release-notes-github<<EOF" >> $GITHUB_ENV
           cat release_notes.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV

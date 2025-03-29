@@ -1,8 +1,3 @@
-2025/03/22-17:04:16.471 ddc Recovering log #3954
-2025/03/22-17:04:16.477 ddc Delete type=0 #3954
-2025/03/22-17:04:16.477 ddc Delete type=3 #3952
-2025/03/22-17:05:33.843 1bb0 Level-0 table #3959: started
-2025/03/22-17:05:33.843 1bb0 Level-0 table #3959: 0 bytes OK
-2025/03/22-17:05:33.845 1bb0 Delete type=0 #3957
-2025/03/22-17:05:33.845 1bb0 Manual compaction at level-0 from '!items!0XoQ7lGPSwjM8Gw4' @ 72057594037927935 : 1 .. '!items.effects!svKaRfNtOXMOXoW6.NcYMpQ7B3RwBuLC7' @ 0 : 0; will stop at (end)
-2025/03/22-17:05:33.845 1bb0 Manual compaction at level-1 from '!items!0XoQ7lGPSwjM8Gw4' @ 72057594037927935 : 1 .. '!items.effects!svKaRfNtOXMOXoW6.NcYMpQ7B3RwBuLC7' @ 0 : 0; will stop at (end)
+2025/03/29-02:05:42.070 125e8 Recovering log #4096
+2025/03/29-02:05:42.081 125e8 Delete type=0 #4096
+2025/03/29-02:05:42.081 125e8 Delete type=3 #4094
