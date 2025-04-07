@@ -19,7 +19,8 @@ jobs:
         id: set-release-notes-github
         run: |
           echo "- Bugfixes:" >> release_notes.txt
-          echo "  - Star Map: Couple additional bugfixes" >> release_notes.txt
+          echo "  - Identify: Fixes for midis new preItemRoll functionality." >> release_notes.txt
+          echo "  - A couple small v13 pre-release fixes" >> release_notes.txt
           echo "release-notes-github<<EOF" >> $GITHUB_ENV
           cat release_notes.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
