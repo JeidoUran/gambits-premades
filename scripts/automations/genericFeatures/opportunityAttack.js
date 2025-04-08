@@ -458,7 +458,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
 
         if(!itemRoll) return;
 
-        await game.gps.addReaction({actorUuid: `${effectOriginActor.uuid}`});
+        // await game.gps.addReaction({actorUuid: `${effectOriginActor.uuid}`});
 
         if(hasSentinel && checkHits) {
             //await effectOriginActor.setFlag("gambits-premades", "sentinelUsed", true);
