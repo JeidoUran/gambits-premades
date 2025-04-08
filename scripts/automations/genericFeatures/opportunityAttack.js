@@ -326,7 +326,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         <div class="gps-dialog-container">
             <div class="gps-dialog-section">
                 <div class="gps-dialog-content">
-                    <p class="gps-dialog-paragraph">Would you like to use your reaction to attack?${hasWarCaster ? " If using War Caster to cast a spell, it must effect only the creature who triggered this Opportunity Attack." : ""}${braceItemUuid ? " This will initiate a use of your Superiority Die for the Brace maneuver." : ""}</p>
+                    <p class="gps-dialog-paragraph">Souhaitez-vous utiliser votre réaction pour attaquer ?${hasWarCaster ? " If using War Caster to cast a spell, it must effect only the creature who triggered this Opportunity Attack." : ""}${braceItemUuid ? " This will initiate a use of your Superiority Die for the Brace maneuver." : ""}</p>
                     <div>
                         <div class="gps-dialog-flex">
                             <label for="item-select_${dialogId}" class="gps-dialog-label">Arme:</label>
