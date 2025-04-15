@@ -1,6 +1,6 @@
 export async function deleteChatMessage({ chatId }) {
     if(!chatId) return;
-    let chatMessage = game.messages.get(chatId);
+    let chatMessage = await game.messages.get(chatId);
     if(!chatMessage) return;
     await chatMessage.delete();
 }
@@ -1131,7 +1131,7 @@ export async function replaceChatCard({ actorUuid, itemUuid, chatContent, rollDa
 
     let msgHistory = [];
     game.messages.reduce((list, message) => {
-        if (message.flags.dnd5e?.item.id === item._id && message.speaker.token === token.document.id) msgHistory.push(message.id);
+        if (message.flags.dnd5e?.item?.id === item?._id && message.speaker.token === token.document.id) msgHistory.push(message.id);
     }, msgHistory);
     let itemCard = msgHistory[msgHistory?.length - 1];
     let chatMessage = false;

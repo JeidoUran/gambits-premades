@@ -1,8 +1,17 @@
 import { executeWorkflow, updateRegionPosition, hideTemplateElements, updateSettings, daeAddFlags, arcaneShotValidActivities } from "./hookUtils.js";
 
 export function registerHooks() {
+    Hooks.on("preUpdateToken", async (token, updateData, options, userId) => {
+        if(!options?.teleport || !updateData?.x) return;
+
+        const originX = token._source.x;
+        const originY = token._source.y;
+        let tokenObject = await MidiQOL.tokenForActor(token.actor);
+        if (game.gpsSettings.magicUsersNemesisEnabled) await executeWorkflow({ workflowItem: "magicUsersNemesis", workflowData: { token: tokenObject, tokenOriginX: originX, tokenOriginY: originY }, workflowType: "teleport", workflowCombat: true });
+    });
+
     Hooks.on("midi-qol.preItemRollV2", async ({workflow, usage, dialog, message}) => {
-        if (!((workflow.item.type === "spell" && workflow.activity.description.chatFlavor.includes("gpsFreeSpellUse")) || (workflow.item.identifier === "guiding-bolt" && workflow.actor.items.some(i => i.flags["gambits-premades"]?.gpsUuid === "62cd752b-7c9c-42ff-9e73-cd7b707aad66")) || (workflow.item.identifier === "identify" && workflow.item.flags["gambits-premades"]?.gpsUuid === "2cc1f50d-cdb8-4f17-a532-2532f74440ae"))) return;
+        if (!((workflow.item.type === "spell" && workflow.activity?.description.chatFlavor.includes("gpsFreeSpellUse")) || (workflow.item?.identifier === "guiding-bolt" && workflow.actor.items.some(i => i.flags["gambits-premades"]?.gpsUuid === "62cd752b-7c9c-42ff-9e73-cd7b707aad66")) || (workflow.item.identifier === "identify" && workflow.item.flags["gambits-premades"]?.gpsUuid === "2cc1f50d-cdb8-4f17-a532-2532f74440ae"))) return;
         let freeSpellUsed;
 
         if(workflow.item.identifier === "guiding-bolt") {
@@ -34,6 +43,7 @@ export function registerHooks() {
         if (game.gpsSettings.counterspellEnabled && workflow.item.type === "spell") await executeWorkflow({ workflowItem: "counterspell", workflowData: workflowItemUuid, workflowType: workflowType, workflowCombat: true });
         if (game.gpsSettings.counterspellEnabled && workflow?.item?.type === "spell") await executeWorkflow({ workflowItem: "counterspell2024", workflowData: workflowItemUuid, workflowType: workflowType, workflowCombat: true });
         if (game.gpsSettings.temporalShuntEnabled && (workflow.item.type === "spell" || workflow.activity.hasAttack)) await executeWorkflow({ workflowItem: "temporalShunt", workflowData: workflowItemUuid, workflowType: workflowType, workflowCombat: true });
+        if (game.gpsSettings.magicUsersNemesisEnabled && workflow.item.type === "spell") await executeWorkflow({ workflowItem: "magicUsersNemesis", workflowData: workflowItemUuid, workflowType: workflowType, workflowCombat: true });
     });
 
     Hooks.on("midi-qol.preCheckHits", async (workflow) => {
@@ -42,6 +52,7 @@ export function registerHooks() {
         if (game.gpsSettings.silveryBarbsEnabled) await executeWorkflow({ workflowItem: "silveryBarbs", workflowData: workflowItemUuid, workflowType: "attack", workflowCombat: true });
         if (game.gpsSettings.cuttingWordsEnabled) await executeWorkflow({ workflowItem: "cuttingWords", workflowData: workflowItemUuid, workflowType: "attack", workflowCombat: true });
         if (game.gpsSettings.witchesHexEnabled) await executeWorkflow({ workflowItem: "witchesHex", workflowData: workflowItemUuid, workflowType: "attack", workflowCombat: true });
+        if (game.gpsSettings.chronalShiftEnabled) await executeWorkflow({ workflowItem: "chronalShift", workflowData: workflowItemUuid, workflowType: "attack", workflowCombat: true });
     });
 
     Hooks.on("midi-qol.preAttackRoll", async (workflow) => {
@@ -85,6 +96,7 @@ export function registerHooks() {
         if (game.gpsSettings.witchesHexEnabled) await executeWorkflow({ workflowItem: "witchesHex", workflowData: workflowItemUuid, workflowType: "save", workflowCombat: true });
         if (game.gpsSettings.legendaryResistanceEnabled) await executeWorkflow({ workflowItem: "legendaryResistance", workflowData: workflowItemUuid, workflowType: "save", workflowCombat: true });
         if (game.gpsSettings.burstOfIngenuityEnabled) await executeWorkflow({ workflowItem: "burstOfIngenuity", workflowData: workflowItemUuid, workflowType: "save", workflowCombat: true });
+        if (game.gpsSettings.chronalShiftEnabled) await executeWorkflow({ workflowItem: "chronalShift", workflowData: workflowItemUuid, workflowType: "save", workflowCombat: true });
     });
 
     Hooks.on("midi-qol.postSavesComplete", async (workflow) => {
@@ -94,12 +106,12 @@ export function registerHooks() {
         if (game.gpsSettings.restoreBalanceEnabled) await executeWorkflow({ workflowItem: "restoreBalance", workflowData: workflowItemUuid, workflowType: "save", workflowCombat: true });
     });
 
-    Hooks.on("preUpdateItem", (item, update) => {
-        if (!game.user.isGM && !item.system?.identified && "identified" in (update.system ?? {}) && game.gpsSettings.identifyRestrictionEnabled) {
+    Hooks.on("preUpdateItem", (item, update, options) => {
+        if (!game.user.isGM && !item.system?.identified && "identified" in (update.system ?? {}) && game.gpsSettings.identifyRestrictionEnabled && !options?.isAdvancement) {
             ui.notifications.error(`${game.gpsSettings.identifyRestrictionMessage}`);
             return false;
         }
-      });
+    });
 
     Hooks.on("midi-qol.preDamageRollComplete", async (workflow) => {
         if(!workflow.activity.hasDamage) return;
@@ -137,7 +149,7 @@ export function registerHooks() {
         const startedPath = `gambits-premades.started`;
         const prevStarted = combat.started;
         foundry.utils.setProperty(options, startedPath, prevStarted);
-    })
+    });
     
     Hooks.on("updateCombat", async (combat, update, options) => {
         if(game.user.id !== game.gps.getPrimaryGM()) return;
@@ -147,7 +159,7 @@ export function registerHooks() {
             await combat.setFlag('gambits-premades', `startProcessed-${combat.id}`, true);
             await game.gps.enableOpportunityAttack(combat, "startCombat");
         }
-    })
+    });
     
     Hooks.on("createCombatant", async (combatant, options, userId) => {
         if(game.user.id !== game.gps.getPrimaryGM()) return;
