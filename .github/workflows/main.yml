@@ -18,9 +18,9 @@ jobs:
       - name: Set Release Notes for Github
         id: set-release-notes-github
         run: |
-          echo "- Updates:" >> release_notes.txt
-          echo "  - Magic Users Nemesis: Cleaned up a couple things" >> release_notes.txt
-          echo "  - Identify Restrictions: Updated to prevent the identify denial message when a player levels up a character. The level up process seems to try to modify the items attunement in certain instances which would cause a denial message to pop." >> release_notes.txt
+          echo "- Bugfixes:" >> release_notes.txt
+          echo "  - workflow.hitTargets: Unsure if this is a midi bug, but put a workaround in place to determine targets differently for certain workflow passes to prevent failure." >> release_notes.txt
+          echo "  - Dissonant Whispers: Add in missing Medkit config option for enabling/disabling animation." >> release_notes.txt
           echo "release-notes-github<<EOF" >> $GITHUB_ENV
           cat release_notes.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
