@@ -126,14 +126,8 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     const initialTimeLeft = Number(MidiQOL.safeGetGameSetting('gambits-premades', `Opportunity Attack Timeout`));
     let debugEnabled = MidiQOL.safeGetGameSetting('gambits-premades', 'debugEnabled');
 
-    //Check if origin token has at least 1 AP (chara)
-    if (effectOriginActor.type === "character" && effectOriginActor.system.resources.primary.value < 1) {
-        if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because of 0 AP`);
-        return;
-    }
-
-    //Check if origin token has at least 1 AP (NPC)
-    if (effectOriginActor.type === "npc" && effectOriginActor.items.find(e => e.name == "Points d'Action").system.uses.spent == 4) {
+    //Check if origin token has at least 1 AP
+    if (effectOriginActor.items.find(i => i.name.startsWith("Points d'Action")).system.uses.spent == 4) {
         if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because of 0 AP`);
         return;
     }
