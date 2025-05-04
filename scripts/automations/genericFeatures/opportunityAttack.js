@@ -386,7 +386,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
 
             if(source && source === "user") braceRoll = await game.gps.socket.executeAsUser("remoteCompleteItemUse", browserUser, { itemUuid: braceItemUuid, actorUuid: effectOriginActor.uuid, options: options });
             else if(source && source === "gm") braceRoll = await game.gps.socket.executeAsUser("remoteCompleteItemUse", gmUser, { itemUuid: braceItemUuid, actorUuid: effectOriginActor.uuid, options: options });
-            if (!braceRoll) return;
+            if(!braceRoll.baseLevel && !braceRoll.castLevel && !braceRoll.checkHits && !braceRoll.itemType) return;
         }
 
         if (!selectedItemUuid) {
@@ -448,7 +448,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
 
         await effectOriginActor.unsetFlag("gambits-premades", "dragonTurtleShieldOA");
 
-        if(!itemRoll) return;
+        if(!itemRoll.baseLevel && !itemRoll.castLevel && !itemRoll.checkHits && !itemRoll.itemType) return;
 
         // await game.gps.addReaction({actorUuid: `${effectOriginActor.uuid}`});
 
