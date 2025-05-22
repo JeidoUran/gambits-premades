@@ -1,5 +1,28 @@
 # Changelog
 
+## [v1.0.40] - 2025-05-22
+-Additions:
+  - Dimension Door 2024: Added the 2024 version
+  - Fire's Burn 2024: Added the Goliath feature
+  - Frost's Chill 2024: Added the Goliath feature
+  - Hill's Tumble 2024: Added the Goliath feature
+  - Storm's Thunder 2024: Added the Goliath feature
+  - Light: Added the 2014 and 2024 versions of the Cantrip
+-Updates:
+  - Opportunity Attack: Added check to try and better handle tokens on different Levels levels
+
+## [v1.0.39] - 2025-05-15
+-Bugfixes:
+  - Ice Knife: Fixed damage not scaling properly... again, for real this time.
+
+## [v1.0.38] - 2025-05-14
+- Updates:
+  - Ashardalons Stride: Migrated damage to an activity, moving forward damage type can be customized in the activity for homebrew. Fixed bug causing animation not to display.
+  - Identify Restrictions: Added check for my new module Gambit's Identification Inhibitor and ignore gps identification handling if that's active.
+-Bugfixes:
+  - Motivational Speech: flags.dae.onUpdateTarget seems to no longer work, switched to a more robust alternative
+  - Ice Knife: Fixed damage not scaling properly. Updated macroPass to account for misses properly.
+
 ## [v1.0.37] - 2025-05-09
 - Additions:
   - Ice Knife: Added 2014 and 2024 (same version) with an animation, configurable in cprs medkit

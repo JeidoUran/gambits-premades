@@ -10,7 +10,7 @@
       "ko-fi": "https://ko-fi.com/gambit07"
     }
   ],
-  "version": "1.0.37",
+  "version": "1.0.40",
   "compatibility": {
     "minimum": 12.328,
     "verified": 12.343,
@@ -132,6 +132,14 @@
       "path": "packs/gps-spells-2024",
       "banner": "modules/gambits-premades/assets/images/gambit_banner.webp",
       "module": "gambits-premades"
+    },
+    {
+      "label": "GPS Race Features 2024",
+      "type": "Item",
+      "name": "gps-race-features-2024",
+      "path": "packs/gps-race-features-2024",
+      "banner": "modules/gambits-premades/assets/images/gambit_banner.webp",
+      "module": "gambits-premades"
     }
   ],
   "packFolders": [
@@ -165,7 +173,8 @@
           "sorting": "m",
           "color": "#93678d",
           "packs": [
-            "gps-spells-2024"
+            "gps-spells-2024",
+            "gps-race-features-2024"
           ]
         }
       ]
@@ -292,5 +301,5 @@
   },
   "url": "https://github.com/gambit07/gambits-premades",
   "manifest": "https://github.com/gambit07/gambits-premades/releases/latest/download/module.json",
-  "download": "https://github.com/gambit07/gambits-premades/releases/download/1.0.37/module.zip"
+  "download": "https://github.com/gambit07/gambits-premades/releases/download/1.0.40/module.zip"
 }
