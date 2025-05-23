@@ -257,7 +257,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     let validWeapons = effectOriginActor.items.filter(item => {
         const acts = item.system?.activities ?? [];
       
-        const qualifiesWeaponOrFeat = (acts.some(a => a.actionType === "mwak") && item.system?.equipped === true) || (item.system?.type?.value === "monster" && item.type === "feat" && acts.some(a => a.actionType === "mwak" || a.actionType === "msak"));
+        const qualifiesWeaponOrFeat = /* (acts.some(a => a.actionType === "mwak") && item.system?.equipped === true) */ item.name.startsWith("Attaque d'opportunité") || (item.system?.type?.value === "monster" && item.type === "feat" && acts.some(a => a.actionType === "mwak" || a.actionType === "msak"));
 
         let warCasterSpell;
         if(hasWarCaster) {
@@ -418,17 +418,6 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         let userSelect = undefined;
         if(source && source === "user") userSelect = browserUser;
         else if(source && source === "gm") userSelect = gmUser;
-
-        if(effectOriginActor.type === "character") {
-            var charges = (effectOriginActor.system.resources.primary.value == null) ? 0 : effectOriginActor.system.resources.primary.value;
-            if (charges <= 4) charges += 1;
-            await effectOriginActor.update({"system.resources.primary.value" : charges});
-        }
-        // else {
-            // var charges = (effectOriginActor.system.resources.legact.value == null) ? 0 : effectOriginActor.system.resources.legact.value;
-            // if (charges <= 4) charges += 1;
-            // await effectOriginActor.update({"system.resources.legact.value" : charges});
-        // }
 
         const options = {
             showFullCard: false,
