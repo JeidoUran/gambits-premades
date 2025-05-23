@@ -38,6 +38,8 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     let dialogId;
     let braceItemUuid;
 
+    let debugEnabled = MidiQOL.safeGetGameSetting('gambits-premades', 'debugEnabled');
+
     // Check if origin token can see token moving
     if(!MidiQOL.canSee(effectOriginToken, token)) {
         if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed at sight check`);
@@ -124,7 +126,6 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     }
 
     const initialTimeLeft = Number(MidiQOL.safeGetGameSetting('gambits-premades', `Opportunity Attack Timeout`));
-    let debugEnabled = MidiQOL.safeGetGameSetting('gambits-premades', 'debugEnabled');
 
     //Check if origin token has at least 1 AP
     if (effectOriginActor.items.find(i => i.name.startsWith("Points d'Action")).system.uses.spent == 4) {
@@ -224,7 +225,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     }
 
     // Check if Levels believes tokens are on different levels
-    if(CONFIG?.Levels?.API?.checkCollision?.(effectOriginActor, token)) {
+    if(CONFIG?.Levels?.API?.testCollision?.({x: effectOriginToken.object.center.x, y: effectOriginToken.object.center.y, z: effectOriginToken.object.losHeight},{x: token.object.center.x, y: token.object.center.y, z: token.object.losHeight})) {
         if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed because Levels indicates the tokens cannot see each other`);
         return;
     }
@@ -586,6 +587,9 @@ export async function enableOpportunityAttack(combat, combatEvent) {
             const topLeftY = tokenCenterY - (sideLength / 2);
             const radius = maxRange * canvas.scene.grid.size / canvas.scene.dimensions.distance;
             const points = [];
+            let elevationTop = token.elevation + maxRange;
+            let elevationBottom = token.elevation - maxRange;
+            console.log(elevationTop, elevationBottom, "elevation")
             let regionShape;
 
             if (canvas.scene.grid.type === 0) {  // Gridless
@@ -641,7 +645,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
             const regionData = {
                 name: `${actor.name} OA Region`,
                 color: browserUser.color,
-                elevation: { bottom: -maxRange, top: maxRange },
+                elevation: { bottom: elevationBottom, top: elevationTop },
                 shapes: [regionShape],
                 behaviors: [
                     {
@@ -703,6 +707,7 @@ export async function enableOpportunityAttack(combat, combatEvent) {
                                 let maxRange = calculateMaxRange(validWeapons, validSpells, tokenSize);
                                 if(maxRange === false) return;
 
+                                await region.setFlag("gambits-premades", "opportunityAttackRegionMaxRange", maxRange);
                                 await region.setFlag("gambits-premades", "opportunityAttackRegionValidOptions", validWeapons?.length > 0 || validSpells?.length > 0);
 
                                 const tokenCenterX = token.x + token.object.w / 2;
@@ -841,7 +846,8 @@ export async function enableOpportunityAttack(combat, combatEvent) {
                         'opportunityAttackRegionValidSpells': validSpells,
                         'opportunityAttackRegionMwakRange': mwakRange,
                         'opportunityAttackRegionTokenSize': Math.max(token.width, token.height),
-                        'opportunityAttackRegionConFac': conversionFactor
+                        'opportunityAttackRegionConFac': conversionFactor,
+                        'opportunityAttackRegionMaxRange': maxRange
                     }
                 }
             };

@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.0.43] - 2025-05-22
+-Updates:
+  - Opportunity Attack: Fixed OA region not updating appropriately on token elevation changes. Added some additional guards into the update hook which should make OA a tiny bit more performant as well.
+
+## [v1.0.42] - 2025-05-22
+-Updates:
+  - Opportunity Attack: Added check to try and better handle tokens on different Levels levels - again
+
+## [v1.0.41] - 2025-05-22
+-Updates:
+  - Opportunity Attack: Added check to try and better handle tokens on different Levels levels - again
+
 ## [v1.0.40] - 2025-05-22
 -Additions:
   - Dimension Door 2024: Added the 2024 version
