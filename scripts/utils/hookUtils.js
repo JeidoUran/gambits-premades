@@ -313,7 +313,7 @@ export async function arcaneShotValidActivities({item, actor}) {
         if (!activity) continue;
         
         const hasArrowItem = actor.items.some(i => 
-        i.name === shot.itemName || i.flags["gambits-premades"]?.gpsUuid === shot.gpsUuid
+            i.name === shot.itemName || i.flags["gambits-premades"]?.gpsUuid === shot.gpsUuid
         );
         
         const baseId = shot.identifier.replace(/18$/, '');
@@ -333,3 +333,9 @@ export async function arcaneShotValidActivities({item, actor}) {
         }
     }
 }
+
+  Hooks.on('updateActor', async (actor, diff, options, userID) => {
+    const token = actor.getActiveTokens()?.[0];
+
+    await game.gps.wound({args: "woundRemovalFullHeal", token, options: diff})
+  });

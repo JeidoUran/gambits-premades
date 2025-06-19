@@ -1,5 +1,44 @@
 # Changelog
 
+## [v1.0.51] - 2025-06-13
+- Updates:
+  - Wound: Updated the effect to use a single stacking effect instead of multiple effects. Cleaned up self-damage application
+
+## [v1.0.50] - 2025-06-13
+- Bugfixes:
+  - Wound - Fix missing identifier
+
+## [v1.0.49] - 2025-06-12
+- Bugfixes:
+  - Black Tentacles: Resolve missing synthetic activities on items
+  - Opportunity Attack: Fix variable not initialized early enough for debug logs
+  - Hide  Wound Checker effect by default for Wound homebrew
+
+## [v1.0.48] - 2025-06-05
+- Bugfixes:
+  - Wound: Fix bug using macroItem with Midi
+  - Fires Burn: Fix bug using macroItem with Midi
+  - Frosts Chill: Fix bug using macroItem with Midi
+  - Storms Thunder: Fix bug using macroItem with Midi
+  - Hills Tumble: Fix bug using macroItem with Midi
+
+## [v1.0.47] - 2025-06-05
+- Additions:
+  - Wound: Added homebrew feature Wound
+- Bugfixes:
+  - Opportunity Attack: couple small bugfixes - thanks bugbear!
+  - Small 3rd party automation general fix
+  - Roksja's Husk: Fix roll not being passed to the correct origin user
+  - Motivational Speech: Fix temporary hp not being applied due to missing socket
+
+## [v1.0.47] - 2025-06-05
+- Additions:
+  - Wound: Added homebrew feature Wound
+- Bugfixes:
+  - Opportunity Attack: couple small bugfixes - thanks bugbear!
+  - Roksja's Husk: Fix roll not being passed to the correct origin user
+  - Motivational Speech: Fix temporary hp not being applied due to missing socket
+
 ## [v1.0.46] - 2025-05-25
 - Additions:
   - Cloud of Daggers 2024: Added 2024 version of Cloud of Daggers

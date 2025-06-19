@@ -673,12 +673,13 @@ export async function process3rdPartyReactionDialog({ dialogTitle, dialogContent
             handleDragStart,
             handleDragOver,
             handleDragEnd,
-            handleCheckboxChange
+            handleCheckboxChange,
+            enemyTokens
         };
     }
 
     function cleanupEventListeners(listeners) {
-        const { windowTitle, pauseButton, itemSelect, damageList, enemyTokens, handleFocusIn, handleFocusOut, handleMouseDown, handlePauseButtonClick, handleItemSelectChange, handleDragStart, handleDragOver, handleDragEnd, handleCheckboxChange } = listeners;
+        const { windowTitle, pauseButton, itemSelect, damageList, handleFocusIn, handleFocusOut, handleMouseDown, handlePauseButtonClick, handleItemSelectChange, handleDragStart, handleDragOver, handleDragEnd, handleCheckboxChange, enemyTokens } = listeners;
         
         if (windowTitle) {
             windowTitle.removeEventListener('focusin', handleFocusIn);
@@ -1432,7 +1433,7 @@ export async function gpsActivityUse({itemUuid, identifier, targetUuid}) {
     const item = await fromUuid(itemUuid);
     if(!item) return console.error(`Shame you didn't pass me an itemUuid`);
     const activity = item.system.activities.find(a => a.identifier === identifier);
-    if(!activity) return console.error(`Naughty Naughty: You've likely removed the identifier name from a ${item.name} automation activity and now it's nowhere to be found ¯\_(ツ)_/¯`);
+    if(!activity) return console.error(`You've likely removed the identifier name from a ${item.name} automation activity which will cause failure.`);
     let targetUuids = (Array.isArray(targetUuid)) ? targetUuid : [targetUuid]
 
     const options = { midiOptions: { targetUuids: targetUuids, noOnUseMacro: true, configureDialog: false, showFullCard: false, ignoreUserTargets: true, checkGMStatus: true, autoRollAttack: true, autoRollDamage: "always", fastForwardAttack: true, fastForwardDamage: true, workflowData: true } };
@@ -1539,4 +1540,11 @@ export async function halfWeaponDamage({workflow}) {
         return await new CONFIG.Dice.DamageRoll('floor((' + damageRoll.formula + ') / 2)', workflow.item.getRollData(), damageRoll.options);
     }));
     await workflow.setDamageRolls(workflow.damageRolls);
+}
+
+export async function gpsApplyTempHp({ actorUuids, tempHp }) {
+    for (let actorUuid of actorUuids) {
+        let actor = await fromUuid(actorUuid);
+        actor.applyTempHP(tempHp);
+    }
 }

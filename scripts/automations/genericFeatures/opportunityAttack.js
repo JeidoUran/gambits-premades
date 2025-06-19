@@ -2,6 +2,7 @@ const regionTokenStates = new Map();
 
 export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionScenario, originX, originY, isTeleport}) {
     let gmUser = game.gps.getPrimaryGM();
+    let debugEnabled = MidiQOL.safeGetGameSetting('gambits-premades', 'debugEnabled');
     if(game.user.id !== gmUser) return;
     //async function wait(ms) { return new Promise(resolve => { setTimeout(resolve, ms); }); }
     let region = await fromUuid(regionUuid);
@@ -14,7 +15,10 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     if(oaDisabled) return;
     
     let currentCombatant = canvas.tokens.get(game.combat?.current.tokenId);
-    if (currentCombatant?.id !== token.object.id) return; // Avoid initiating opportunity attack when it's not a token's turn
+    if (currentCombatant?.id !== token.object.id) {
+        if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed due to bugbear`);
+        return; // Avoid initiating opportunity attack when it's not a token's turn
+    }
 
     const effectOriginActor = await fromUuid(region.flags["gambits-premades"].actorUuid);
     const effectOriginToken = await fromUuid(region.flags["gambits-premades"].tokenUuid);
@@ -38,11 +42,9 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
     let dialogId;
     let braceItemUuid;
 
-    let debugEnabled = MidiQOL.safeGetGameSetting('gambits-premades', 'debugEnabled');
-
     // Check if origin token can see token moving
     if(!MidiQOL.canSee(effectOriginToken, token)) {
-        if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed at sight check`);
+        if(debugEnabled) console.error(`Opportunity Attack for ${effectOriginActor.name} failed - not tokens turn`);
         return;
     }
 
@@ -254,6 +256,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         }
     }
     if(!warCasterMelee && !warCasterRange) hasWarCaster = false;
+    
     let overrideItems = ["Booming Blade"];
 
     let validWeapons = effectOriginActor.items.filter(item => {
@@ -369,7 +372,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         result = await game.gps.socket.executeAsUser("process3rdPartyReactionDialog", browserUser, {dialogTitle:dialogTitlePrimary,dialogContent,dialogId,initialTimeLeft,validTokenPrimaryUuid: effectOriginToken.uuid,source: gmUser === browserUser ? "gm" : "user",type:"singleDialog", notificationId: notificationMessage._id});
     }
             
-    const { userDecision, enemyTokenUuid, allyTokenUuid, damageChosen, selectedItemUuid, favoriteCheck, source, type } = result;
+    const { userDecision, enemyTokenUuid, allyTokenUuid, damageChosen, selectedItemUuid, favoriteCheck, source, type } = result || {};
 
     if (!userDecision) {
         await effectOriginActor.unsetFlag("gambits-premades", "dragonTurtleShieldOA");
