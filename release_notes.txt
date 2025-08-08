@@ -1,6 +1,2 @@
-- Additions:
-  - Mage Slayer 2024: Added the 2024 version of Mage Slayer
 - Bugfixes:
-  - Circle of Power: Fix animation playing on each ally in the aura
-  - Reckless: Somehow removed the macro, re-added and made a couple small fixes
-  - Sentinel 2024: Fix item use gpsUuid from Sentinel 2014
+  - Dialogs: Added throttling to the dialog title bar animation to keep it from consuming FPS

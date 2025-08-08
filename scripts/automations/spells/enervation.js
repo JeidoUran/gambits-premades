@@ -1,7 +1,7 @@
 export async function enervation({ speaker, actor, token, character, item, args, scope, workflow, options }) {
     if(args[0].macroPass === "postActiveEffects") {
         let targets = Array.from(workflow.failedSaves);
-        let effectData = actor.appliedEffects.find(e => e.name === "Enervation - Range");
+        let effectData = actor.appliedEffects.find(e => e.flags["gambits-premades"]?.gpsUuid === "9c513478-ffd9-4d5a-9e39-3d72bf0518ab");
 
         if(!targets || targets.length >= 3) {
             const concEffect = MidiQOL.getConcentrationEffect(actor, item.uuid);
@@ -13,7 +13,15 @@ export async function enervation({ speaker, actor, token, character, item, args,
 
         for(let target of targets) {
             let healAmount = Math.floor(workflow.damageTotal / 2);
-            await MidiQOL.applyTokenDamage([{ damage: healAmount, type: "healing" }], healAmount, new Set([token]), item, new Set());
+            let healRoll = await new CONFIG.Dice.DamageRoll(`${healAmount}`, {}, {type: "healing", properties: ["mgc"]}).evaluate();
+
+            const itemData = {
+                name: "Enervation - Healing",
+                type: "feat",
+                img: item.img
+            }
+
+            await new MidiQOL.DamageOnlyWorkflow(actor, token, healRoll.total, "healing", [token], healRoll, {itemData: itemData, flavor: "Enervation - Healing"});
 
             let content = `<span style='text-wrap: wrap;'>You deal ${workflow.damageTotal} points of damage to your target and heal up to ${healAmount} points using Enervation. <img src="${target.actor.img}" width="30" height="30" style="border:0px"></span>`
             let actorPlayer = MidiQOL.playerForActor(actor);
@@ -36,74 +44,90 @@ export async function enervation({ speaker, actor, token, character, item, args,
             .play()
         }
 
-        let targetValidation;
-        if(targetUuids.length > 1) {
-            targetValidation = {
-                "ActiveAuras": 
-                {
-                    "customCheck": `(token.document.uuid === '${targets[0].document.uuid}' || token.document.uuid === '${targets[1].document.uuid}') && (MidiQOL.canSee(token.document.uuid, '${targets[0].document.uuid}') || MidiQOL.canSee(token.document.uuid, '${targets[1].document.uuid}'))`,
-                    "isAura": true,
-                    "aura": "Enemy",
-                    "nameOverride": "",
-                    "radius": "60",
-                    "alignment": "",
-                    "type": "",
-                    "ignoreSelf": true,
-                    "height": true,
-                    "hidden": false,
-                    "displayTemp": false,
-                    "hostile": false,
-                    "onlyOnce": false,
-                    "wallsBlock": "true"
-                }
-            };
-        }
-        else {
-            targetValidation = {
-                "ActiveAuras": 
-                {
-                    "customCheck": `token.document.uuid === '${targets[0].document.uuid}' && MidiQOL.canSee(token.document.uuid, '${targets[0].document.uuid}')`,
-                    "isAura": true,
-                    "aura": "Enemy",
-                    "nameOverride": "",
-                    "radius": "60",
-                    "alignment": "",
-                    "type": "",
-                    "ignoreSelf": true,
-                    "height": true,
-                    "hidden": false,
-                    "displayTemp": false,
-                    "hostile": false,
-                    "onlyOnce": false,
-                    "wallsBlock": "true"
-                }
-            };
-        }
+        let auraTargets;
+        if(targetUuids.length > 1) auraTargets = `(token.document.uuid === '${targets[0].document.uuid}' || token.document.uuid === '${targets[1].document.uuid}') && (MidiQOL.canSee(token.document.uuid, '${targets[0].document.uuid}') || MidiQOL.canSee(token.document.uuid, '${targets[1].document.uuid}'))`;
+        else auraTargets = `token.document.uuid === '${targets[0].document.uuid}' && MidiQOL.canSee(token.document.uuid, '${targets[0].document.uuid}')`;
 
-        await effectData.update({ flags: targetValidation });
-        let effectDataSource = actor.appliedEffects.find(e => e.name === item.name);
-        await effectDataSource.setFlag("gambits-premades", "enervationTargetUuid", targetUuids);
-        await effectDataSource.setFlag("gambits-premades", "enervationCastLevel", workflow.castData.castLevel);
+        let effectDataRange = [{
+            "origin": item.uuid,
+            "duration": {
+                "seconds": 60
+            },
+            "disabled": false,
+            "name": "Enervation - Range",
+            "img": item.img,
+            "type": "auraeffects.aura",
+            "system": {
+                "showRadius": false,
+                "applyToSelf": false,
+                "bestFormula": "",
+                "canStack": false,
+                "collisionTypes": [
+                    "move",
+                    "sight"
+                ],
+                "color": null,
+                "combatOnly": true,
+                "disableOnHidden": false,
+                "distanceFormula": "60",
+                "disposition": -1,
+                "evaluatePreApply": false,
+                "opacity": 0.25,
+                "overrideName": "",
+                "script": auraTargets,
+                "stashedChanges": [],
+                "stashedStatuses": []
+            },
+            "changes": [
+                {
+                    "key": "macro.itemMacro",
+                    "mode": 0,
+                    "value": `function.game.gps.enervation ${actor.uuid} ${item.uuid}`,
+                    "priority": 20
+                }
+            ],
+            "transfer": false,
+            "flags": {
+                "dae": {
+                    "disableIncapacitated": false,
+                    "selfTarget": true,
+                    "selfTargetAlways": true,
+                    "dontApply": false,
+                    "stackable": "noneName"
+                },
+                "gambits-premades": {
+                    "gpsUuid": "0d9ce5a3-a0b0-44a9-b03b-edd413590139"
+                },
+                "auraeffects": {
+                    "originalType": "base"
+                }
+            }
+        }];
+
+        let rangeEffect = await MidiQOL.socket().executeAsGM("createEffects", { actorUuid: actor.uuid, effects: effectDataRange });
+
+        const concEffect = MidiQOL.getConcentrationEffect(actor, item.uuid);
+        await concEffect.addDependent(rangeEffect[0]);
+
+        await effectData.setFlag("gambits-premades", "enervationTargetUuid", targetUuids);
+        await effectData.setFlag("gambits-premades", "enervationCastLevel", workflow.castData.castLevel);
     }
 
     if(args[0] === "off") {
         const originActor = await fromUuid(args[2]);
 
         let effectData = originActor.appliedEffects.find(e => e.flags["gambits-premades"]?.gpsUuid === "9c513478-ffd9-4d5a-9e39-3d72bf0518ab");
-        if(!effectData) return;
         let effectDataRange = originActor.appliedEffects.find(e => e.flags["gambits-premades"]?.gpsUuid === "0d9ce5a3-a0b0-44a9-b03b-edd413590139");
-        if(!effectDataRange) return;
-        let targetUuids = effectData.getFlag("gambits-premades", "enervationTargetUuid");
+        let targetUuids = effectData?.getFlag("gambits-premades", "enervationTargetUuid");
 
         if(targetUuids.length <= 1) {
             const concEffect = MidiQOL.getConcentrationEffect(originActor, args[3]);
-            if(!concEffect) return;
-            await MidiQOL.socket().executeAsGM('removeEffects', { actorUuid: originActor.uuid, effects: [concEffect.id] });
+            if(concEffect) await MidiQOL.socket().executeAsGM('removeEffects', { actorUuid: originActor.uuid, effects: [concEffect.id] });
         }
         else {
-            targetUuids = targetUuids.filter(uuid => uuid !== token.document.uuid);
-            await effectData.setFlag("gambits-premades", "enervationTargetUuid", targetUuids);
-            await effectDataRange.setFlag("ActiveAuras", "customCheck", `token.document.uuid === '${targetUuids[0]}' && MidiQOL.canSee(token.document.uuid, '${targetUuids[0]}')`);
+            targetUuids = targetUuids?.filter(uuid => uuid !== token.document.uuid);
+            await effectData?.setFlag("gambits-premades", "enervationTargetUuid", targetUuids);
+            await effectDataRange?.update({ 'system.script': `token.document.uuid === '${targetUuids[0]}' && MidiQOL.canSee(token.document.uuid, '${targetUuids[0]}')` });
         }
 
         await Sequencer.EffectManager.endEffects({ name: `${token.id}_Enervation`});
@@ -164,7 +188,15 @@ export async function enervation({ speaker, actor, token, character, item, args,
                 await new MidiQOL.DamageOnlyWorkflow(actor, token, damageRoll.total, "necrotic", [target.object], damageRoll, {itemData: itemData, flavor: "Enervation - Damage (Necrotic)"});
 
                 const healAmount = Math.floor(damageRoll.total / 2);
-                await MidiQOL.applyTokenDamage([{ damage: healAmount, type: "healing" }], healAmount, new Set([token]), item, new Set());
+                let healRoll = await new CONFIG.Dice.DamageRoll(`${healAmount}`, {}, {type: "healing", properties: ["mgc"]}).evaluate();
+
+                const itemDataHealing = {
+                    name: "Enervation - Healing",
+                    type: "feat",
+                    img: item.img
+                }
+
+                await new MidiQOL.DamageOnlyWorkflow(actor, token, healRoll.total, "healing", [token], healRoll, {itemData: itemDataHealing, flavor: "Enervation - Healing"});
 
                 let content = `<span style='text-wrap: wrap;'>You deal ${damageRoll.total} points of damage to your target and heal up to ${healAmount} points using Enervation. <img src="${target.actor.img}" width="30" height="30" style="border:0px"></span>`
                 let actorPlayer = MidiQOL.playerForActor(actor);

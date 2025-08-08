@@ -10,7 +10,7 @@ export function cloudOfDaggers({template, itemUuid}) {
         scaleDecision = 1.25;
     }
     else {
-        alignmentDecision = { edge: "on", offset: ( {x: 70, y: 0} ) };
+        alignmentDecision = { edge: "on", offset: ( {x: 50, y: 0} ) };
         scaleDecision = 0.65;
     }
 
