@@ -81,7 +81,7 @@ export async function opportunityAttackScenarios({tokenUuid, regionUuid, regionS
         let dragonTurtleShield = effectOriginActor.items.getName("Dragon Turtle Dueling Shield");
         if(dragonTurtleShield) await effectOriginActor.setFlag("gambits-premades", "dragonTurtleShieldOA", true);
         
-            dialogTitle = "Attaque d'opportunité";
+        dialogTitle = "Attaque d'opportunité";
         dialogId = "opportunityattack";
     }
     else if(regionScenario === "onEnter") {
@@ -591,7 +591,7 @@ async function processValidOptions({actor}) {
     let validWeapons = actor.items.filter(item => {
         const acts = item.system?.activities ?? [];
       
-        const qualifiesWeaponOrFeat = (acts.some(a => a.actionType === "mwak") && item.system?.equipped === true) || (item.system?.type?.value === "monster" && item.type === "feat" && acts.some(a => a.actionType === "mwak" || a.actionType === "msak"));
+        const qualifiesWeaponOrFeat = /* (acts.some(a => a.actionType === "mwak") && item.system?.equipped === true) */ item.name.startsWith("Attaque d'opportunité") || (item.system?.type?.value === "monster" && item.type === "feat" && acts.some(a => a.actionType === "mwak" || a.actionType === "msak"));
 
         let warCasterSpell;
         if(hasWarCaster) {
