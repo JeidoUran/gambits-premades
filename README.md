@@ -9,7 +9,6 @@
 <li>Contains a suite of fully automated items, features, spells, etc. This includes some very difficult to handle "3rd party reaction" items such as Counterspell, Opportunity Attacks, Silvery Barbs, etc.</li>
 <li>Beautiful AppV2 Dialogs for reaction automations with an integrated and animated countdown timer.</li>
 <li>Optional customization to display reaction dialogs for the module to both the GM and Player. AFK player? No problem.</li>
-<li>Optional customization to set the Primary GM in your world for the module, helpful for DM's that run with an assistant GM for automation handling.</li>
 <li>Optional customization for Region Token wrapping to better recognize tokens within regions based off 5e's ruleset.</li>
 <li>Optional customization to fully hide placed templates, let an animation define the area without ugly template borders and filler.</li>
 <li>Optional customization to fully prevent players from self-identifying unidentified items, except when using the Identify spell automation.</li>
@@ -26,7 +25,7 @@ Dynamic effects using Active Effects<br>
 Region Attacher<br>
 </BLOCKQUOTE>
 
-<b>Dependencies V12 5e 4.x (V1.0.1-V1.0.53)</b>
+<b>Dependencies V12 5e 4.x (V1.0.1-V1.0.56)</b>
 <BLOCKQUOTE>
 Midi QOL<br>
 Active Auras<br>
