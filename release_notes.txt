@@ -1,3 +1,5 @@
+- Additions:
+  - Indomitable 2024: Added Fighter's 2024 feature
 - Bugfixes:
-  - Entropic Ward: Resolved item calls not referencing the origin item
-  - Fix OA size not updating if a weapon was enabled/disabled before turn end
+  - Midi's workflow.activityHasSave was probably reverted to it's proper true/false value, but previously it stored some save data that was used. Multiple automations fixed where that caused issues
+  - findValidTokens: Function updated to find spell slots appropriately again, typo in the spell check path
