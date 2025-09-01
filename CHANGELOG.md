@@ -1,5 +1,44 @@
 # Changelog
 
+## [v2.1.6] - 2025-08-31
+- Additions:
+  - All relevant 2014 spells should now have their 2024 variant included
+  - Entangle 2024: Added 2024 version
+  - Black Tentacles 2024: Added 2024 version
+  - Dissonant Whispers 2024: Added 2024 version
+  - Foresight 2024: Added 2024 version (No changes)
+  - Hellish Rebuke 2024: Added 2024 version (No changes)
+  - Heroes Feast 2024: Added 2024 version
+  - Holy Aura 2024: Added 2024 version (No changes)
+  - Identify 2024: Added 2024 version (No changes)
+  - Ray of Sickness 2024: Added 2024 version
+  - Power Word Heal 2024: Added 2024 version
+  - Power Word Stun 2024: Added 2024 version
+  - Stinking Cloud 2024: Added 2024 version
+  - Vicious Mockery 2024: Added 2024 version
+
+## [v2.1.4] - 2025-08-30
+- Additions:
+  - Confusion 2024: Added 2024 version, only a slight change to the directional roll
+  - Command 2024: Added 2024 version, now only has a dropdown list of selectable commands
+- Updates:
+  - Re-built all module compendiums, hopefully will be more stable compendium db's across all server builds
+
+## [v2.1.3] - 2025-08-30
+- Updates:
+  - Add check for Wounded homebrew to prevent hook failures
+
+## [v2.1.2] - 2025-08-30
+- Updates:
+  - Updated a TON of reaction items not using activation condition false in activities which was causing the default midi reaction to pop-up as a duplicate. Think I caught everything but let me know if you see a rogue Midi reaction dialog
+  - Elemental Affinity 2024: Updated implementation to use the cpr medkit to assign selected damage type instead of a dialog on first use. Added homebrew damage types to medkit selector.
+- Bugfixes:
+  - Indomitable 2024: Fixed hook never actually getting called, oops
+  - Opportunity Attack: Resolved bug where metric wasn't being checked for spells and weapons causing incorrect OA sizing in certain scenarios
+  - Dissonant Whispers: Resolved some incorrect and missing variables
+  - moveTokenByCardinal: Updated and improved movement functionality
+  - moveTokenByOriginPoint: Updated and improved movement functionality, better respects stopping at the origin tokens point
+
 ## [v2.1.1] - 2025-08-16
 - Additions:
   - Indomitable 2024: Added Fighter's 2024 feature
