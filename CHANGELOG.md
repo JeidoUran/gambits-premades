@@ -1,5 +1,40 @@
 # Changelog
 
+## [v2.1.12] - 2025-09-08
+- Updates:
+  - freeSpellUse: Revamped freeSpellUse function. As a reminder, this can be used by adding gpsFreeSpellUse to an activity Chat Flavor text box. Previously this only supported a single free use per long rest. Now also supports configuring the number of uses when setting the activity up to use Item or Activity Uses. This will account for the number of uses, as well as the recharge duration option set (Long Rest, Short Rest, or Daily). You can still simply add gpsFreeSpellUse without item/activity uses to have a simple once per long rest effect added.
+- Bugfixes:
+  - Burst of Ingenuity: Fixed Save DC not being checked on activity properly
+
+## [v2.1.11] - 2025-09-07
+- Additions:
+  - Power Word Pain: Added
+- Updates:
+  - Second try at removing default midi reactions for a bunch of items because I'm a dummy
+- Bugfixes:
+  - Opportunity Attack: Resolve error preventing GM from receiving Opportunity Attacks when PC's moved due to token control issue
+
+## [v2.1.10] - 2025-09-05
+- Updates:
+  - Restore Balance: Added better debug support
+
+## [v2.1.9] - 2025-09-04
+- Additions:
+  - Reckless Attack 2024: Added due to minimal changes needed from the 2014 version. Offers an alternative if you'd prefer the dialog on first attack instead of CPR toggle
+- Bugfixes:
+  - Reckless Attack: Fixed advantage not working after initial attack due to missing activity handling along with other various fixes
+  - Opportunity Attack: Improved diagonal movement parsing on gridded by modifying the region shapes
+
+## [v2.1.8] - 2025-09-03
+- Bugfixes:
+  - Restore Balance: Cleaned up attack handling to resolve a number of issues
+
+## [v2.1.7] - 2025-09-03
+- Bugfixes:
+  - Armor of Hexes: Added missing check for Hexblade's Curse effect
+  - Dissonant Whispers: Fixed reaction effect application not socketed correctly
+  - Indomitable 2024: Fix missing debugEnabled variable
+
 ## [v2.1.6] - 2025-08-31
 - Additions:
   - All relevant 2014 spells should now have their 2024 variant included
