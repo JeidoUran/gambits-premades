@@ -1,5 +1,4 @@
 - Updates:
-  - Ill Omen Bow: Updated for v13, last updated in.... v11
-  - Fire Form: Updated Fire Elemental's monster feature to use Aura Effects instead of Active Auras
-  - Cold Aura: Updated Ice Spider Queen's monster feature to use Aura Effects instead of Active Auras
-  - Flash of Genius: Updated to account for sheet rolls
+  - Portent: Converted portent rolls to activity rolls so roll data context is accessible
+- Bugfixes:
+  - Gift of the Gem Dragon: Fixed activity not consuming item uses
