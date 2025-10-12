@@ -1,5 +1,42 @@
 # Changelog
 
+## [v2.1.27] - 2025-10-06
+- Updates:
+  - Second pass at updating the release process.
+- Bugfixes:
+  - Merged fixes for various automations metric range detection, thanks Tallon
+
+## [v2.1.20] - 2025-10-05
+- Additions:
+  - Polearm Master 2024: Added 2024 feat, no changes.
+- Updates:
+  - Compendium Data: Added a build of compendium data to the release process to resolve issues with invalid pack data
+- Bugfixes:
+  - Polearm Master: Add @mod damage bonus to attack
+
+## [v2.1.19] - 2025-10-05
+- Additions:
+  - Polearm Master 2024: Added 2024 feat, no changes
+- Updates:
+  - Compendium Data: Added a build of compendium data to the release process to resolve issues with invalid pack data
+- Bugfixes:
+  - Polearm Master: Add @mod damage bonus to attack
+
+## [v2.1.19] - 2025-10-05
+- Additions:
+  - Polearm Master 2024: Added 2024 feat, no changes
+- Updates:
+  - Compendium Data: Added a build of compendium data to the release process to resolve issues with invalid pack data
+- Bugfixes:
+  - Polearm Master: Add @mod damage bonus to attack
+
+## [v2.1.18] - 2025-10-04
+- Updates:
+  - Healing Surge: Updated to dialogV2, added native hit die roll handling, removed custom chat modification, etc
+- Bugfixes:
+  - findValidTokens: Fix a missing guard for actorless tokens
+  - Triumph: Fix a couple dialog issues
+
 ## [v2.1.17] - 2025-10-03
 - Updates:
   - Portent: Converted portent rolls to activity rolls so roll data context is accessible

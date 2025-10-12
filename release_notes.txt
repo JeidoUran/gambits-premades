@@ -1,4 +1,4 @@
 - Updates:
-  - Portent: Converted portent rolls to activity rolls so roll data context is accessible
+  - Second pass at updating the release process.
 - Bugfixes:
-  - Gift of the Gem Dragon: Fixed activity not consuming item uses
+  - Merged fixes for various automations metric range detection, thanks Tallon
