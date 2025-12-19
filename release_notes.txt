@@ -1,7 +1,2 @@
 - Updates:
-  - Updated a number of spells to use default damage details instead of custom, just a relic of the old days
-  - Elemental Affinity: Updated damage roll to add to existing damage roll rather than creating its own in order to not trigger things like extra concentration checks
-- Bugfixes:
-  - Dialogs: Resolved some bad performance bugs
-  - Ice Knife: Updated to work with CPR transmuted spell (I think)
-  - Reckless Attack 2024: Updated to prevent dialog if token is not using a strength weapon
+  - Third Party Reactions: Updated all temporary informational chat notifications for reactions to display for all users instead of just the GM, should give everybody a better sense of what's going on when there's a pause in gameplay while waiting for a dialog selection

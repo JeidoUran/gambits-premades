@@ -1,5 +1,17 @@
 # Changelog
 
+## [v2.1.33] - 2025-12-05
+- Updates:
+  - Third Party Reactions: Updated all temporary informational chat notifications for reactions to display for all users instead of just the GM, should give everybody a better sense of what's going on when there's a pause in gameplay while waiting for a dialog selection
+
+## [v2.1.32] - 2025-12-05
+- Added compatability for DND5e V5.2
+- Updates:
+  - Hills Tumble: Added Prone check to prevent dialog from popping if target is already prone
+- Bugfixes:
+  - Ice Knife: Reverted last update to a working version
+  - Elemental Affinity 2024: Resolved issue causing additional damage not to apply
+
 ## [v2.1.31] - 2025-11-23
 - Updates:
   - Updated a number of spells to use default damage details instead of custom, just a relic of the old days
