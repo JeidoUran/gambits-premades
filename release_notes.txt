@@ -1,2 +1,2 @@
-- Updates:
-  - Third Party Reactions: Updated all temporary informational chat notifications for reactions to display for all users instead of just the GM, should give everybody a better sense of what's going on when there's a pause in gameplay while waiting for a dialog selection
+- Bugfixes:
+  - Resolved an item being duplicated in compendium

@@ -9,7 +9,7 @@
       "chat": ""
     },
     "source": {
-      "custom": "2.1.32",
+      "custom": "2.1.34",
       "rules": "2024",
       "revision": 1,
       "license": "CC-BY-4.0",
@@ -106,8 +106,11 @@
               "denomination": null,
               "bonus": "",
               "types": [
-                "acid"
-              ]
+                "force"
+              ],
+              "scaling": {
+                "number": 1
+              }
             }
           ]
         },
@@ -151,7 +154,8 @@
           "magicEffect": false,
           "magicDamage": false,
           "noConcentrationCheck": true,
-          "autoCEEffects": "none"
+          "autoCEEffects": "none",
+          "skipConcentrationCheck": false
         },
         "isOverTimeFlag": false,
         "overTimeProperties": {
@@ -159,9 +163,7 @@
           "preRemoveConditionText": "",
           "postRemoveConditionText": ""
         },
-        "name": "",
-        "img": "",
-        "appliedEffects": []
+        "name": ""
       }
     },
     "enchant": {},
@@ -172,7 +174,7 @@
   "effects": [
     {
       "name": "Elemental Affinity",
-      "origin": "Actor.wyNbGAneQ1S9NDqi.Item.pWxhdUGuHyK8KVh2",
+      "origin": "Compendium.world.gps-class-features-2024.Item.Zs1R4qYQBOOiPTuA",
       "duration": {
         "startTime": null,
         "combat": null,
@@ -191,7 +193,13 @@
         {
           "key": "flags.midi-qol.onUseMacroName",
           "mode": 0,
-          "value": "function.game.gps.elementalAffinity2024, postAllRollsComplete",
+          "value": "function.game.gps.elementalAffinity2024, preAllRollsComplete",
+          "priority": 20
+        },
+        {
+          "key": "macro.itemMacro",
+          "mode": 0,
+          "value": "function.game.gps.elementalAffinity2024 @itemUuid @actorUuid",
           "priority": 20
         }
       ],
@@ -212,7 +220,7 @@
           "showIcon": false,
           "disableIncapacitated": false,
           "durationExpression": "",
-          "macroRepeat": "none",
+          "macroRepeat": "startEveryTurn",
           "specialDuration": []
         },
         "core": {
@@ -236,7 +244,7 @@
           "statuses": []
         }
       },
-      "_key": "!items.effects!H6yCckNkh9oKloks.yHQF1hyZZzy4TrT1"
+      "_key": "!items.effects!Zs1R4qYQBOOiPTuA.yHQF1hyZZzy4TrT1"
     }
   ],
   "flags": {
@@ -244,9 +252,12 @@
       "last": {
         "paGSqioM9uF3o6l5": {
           "damageType": {
-            "0": "psychic"
+            "0": "force"
           }
         }
+      },
+      "riders": {
+        "activity": []
       }
     },
     "gambits-premades": {
@@ -306,17 +317,15 @@
       ],
       "info": {
         "source": "gambits-premades",
-        "version": "2.1.2",
+        "version": "2.1.32",
         "rules": "modern"
       },
       "config": {
-        "damageType": "acid"
+        "damageType": "force"
       }
     },
-    "midi-qol": {
-      "onUseMacroName": ""
-    }
+    "midi-qol": {}
   },
-  "_id": "H6yCckNkh9oKloks",
-  "_key": "!items!H6yCckNkh9oKloks"
+  "_id": "Zs1R4qYQBOOiPTuA",
+  "_key": "!items!Zs1R4qYQBOOiPTuA"
 }
